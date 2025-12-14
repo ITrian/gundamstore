@@ -19,5 +19,13 @@ class Controller {
             die("View does not exist.");
         }
     }
+    // Hàm bắt buộc đăng nhập (Middleware)
+    // Các Controller con sẽ gọi hàm này ở đầu mỗi function
+    protected function requireLogin() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: ' . BASE_URL . '/auth/login');
+            exit;
+        }
+    }
 }
 ?>
