@@ -21,7 +21,7 @@
                 <a class="nav-link text-white" href="index.php?controller=report">Báo cáo</a>
             </li>
             <li class="nav-item mt-3">
-                <a class="nav-link text-warning" href="index.php?controller=auth&action=logout">Đăng xuất</a>
+                <a class="nav-link text-warning fw-bold" href="<?php echo BASE_URL; ?>/auth/logout">Đăng xuất</a>
             </li>
         </ul>
     </div>

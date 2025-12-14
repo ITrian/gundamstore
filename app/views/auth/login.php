@@ -27,7 +27,6 @@
                     <?php endif; ?>
 
                    <form method="post" action="index.php?controller=auth&action=login">
-
                         <div class="mb-3">
                             <label class="form-label">Tên đăng nhập</label>
                             <input type="text" name="username" class="form-control" required>

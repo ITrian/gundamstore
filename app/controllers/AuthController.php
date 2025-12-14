@@ -1,6 +1,11 @@
 <?php
 class AuthController extends Controller {
 
+    public function index() {
+        // Nếu người dùng vào /auth thì tự chuyển sang /auth/login
+        $this->login(); 
+    }
+
     // Hiển thị form login hoặc xử lý submit
     public function login() {
         // Nếu đã đăng nhập rồi thì đá về trang chủ
@@ -45,10 +50,26 @@ class AuthController extends Controller {
     }
 
     // Đăng xuất
-    public function logout() {
-        session_destroy(); // Hủy toàn bộ session
+public function logout() {
+        // 1. Khởi động session nếu chưa có (để tìm được mà hủy)
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // 2. Xóa sạch các biến trong Session
+        unset($_SESSION['user_id']);
+        unset($_SESSION['user_name']);
+        unset($_SESSION['user_role']);
+        unset($_SESSION['role_name']);
+
+        // 3. Hủy hoàn toàn phiên làm việc
+        session_destroy();
+
+        // 4. Chuyển hướng về trang đăng nhập
         header('Location: ' . BASE_URL . '/auth/login');
-        exit;
+        
+        // 5. Kết thúc code ngay lập tức (Quan trọng)
+        exit();
     }
 }
 ?>
