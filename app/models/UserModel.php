@@ -1,0 +1,29 @@
+<?php
+class UserModel {
+    private $conn;
+
+    public function __construct() {
+        $this->conn = Database::getInstance()->getConnection();
+    }
+
+    // Lấy thông tin người dùng theo tài khoản (username)
+    public function getByUsername($username) {
+        try {
+            // Join bảng VAITRO để lấy tên vai trò luôn
+            $sql = "SELECT nd.*, vt.tenVaiTro 
+                    FROM NGUOIDUNG nd 
+                    JOIN VAITRO vt ON nd.maVaiTro = vt.maVaiTro 
+                    WHERE nd.taiKhoan = :username";
+            
+            $stmt = $this->conn->prepare($sql);
+            $stmt->bindParam(':username', $username);
+            $stmt->execute();
+            
+            // Trả về 1 dòng dữ liệu hoặc false
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            return false;
+        }
+    }
+}
+?>
