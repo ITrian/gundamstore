@@ -1,20 +1,76 @@
 <?php
 class ProductController extends Controller {
+    private $productModel;
 
     public function __construct() {
-        $this->requireLogin(); // Bắt buộc đăng nhập mới xem được
+        $this->requireLogin();
+        $this->productModel = $this->model('ProductModel');
     }
 
+    // Trang danh sách sản phẩm
     public function index() {
-        // 1. Gọi Model để lấy danh sách sản phẩm
-        $productModel = $this->model('ProductModel');
-        $products = $productModel->getAllProducts();
-
-        // 2. Đẩy dữ liệu ra View
+        $products = $this->productModel->getAll();
+        
         $data = [
+            'title' => 'Danh sách Hàng hóa',
             'products' => $products
         ];
+        
         $this->view('products/index', $data);
+    }
+
+    public function create() {
+        // 1. Lấy dữ liệu phụ trợ cho các ô Select box
+        // Lưu ý: Bạn cần viết thêm các hàm này trong ProductModel hoặc tạo CategoryModel/UnitModel riêng
+        // Ở đây mình ví dụ gọi trực tiếp query đơn giản hoặc giả định Model đã có hàm
+        $db = Database::getInstance()->getConnection();
+
+        // Lấy danh mục
+        $stmt = $db->query("SELECT * FROM DanhMuc");
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy đơn vị tính
+        $stmt = $db->query("SELECT * FROM DONVITINH");
+        $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy NCC
+        $stmt = $db->query("SELECT * FROM NHACUNGCAP");
+        $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $data = [
+            'title' => 'Thêm hàng hóa mới',
+            'categories' => $categories,
+            'units' => $units,
+            'suppliers' => $suppliers
+        ];
+
+        $this->view('products/create', $data);
+    }
+
+    // Xử lý lưu sản phẩm vào CSDL
+    public function store() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Lấy dữ liệu từ form
+            $data = [
+                'maHH' => $_POST['maHH'],
+                'tenHH' => $_POST['tenHH'],
+                'maDanhMuc' => $_POST['maDanhMuc'],
+                'maNCC' => $_POST['maNCC'],
+                'maDVT' => $_POST['maDVT'],
+                'model' => $_POST['model'],
+                'thuongHieu' => $_POST['thuongHieu'],
+                'moTa' => $_POST['moTa']
+            ];
+
+            // Gọi Model để insert
+            if ($this->productModel->create($data)) {
+                // Thành công -> Về trang danh sách
+                header('Location: ' . BASE_URL . '/product');
+            } else {
+                // Thất bại -> Báo lỗi (Tạm thời die ra màn hình)
+                die("Lỗi: Mã hàng đã tồn tại hoặc dữ liệu không hợp lệ.");
+            }
+        }
     }
 }
 ?>

@@ -2,106 +2,95 @@
 <?php require_once APP_ROOT . '/views/layouts/sidebar.php'; ?>
 
 <div class="container-fluid">
-    <h1 class="h3 mb-4 text-gray-800">Tạo Phiếu Nhập Kho</h1>
+    <h1 class="h3 mb-4 text-gray-800">Thêm Mới Sản Phẩm</h1>
 
-    <form action="<?php echo BASE_URL; ?>/import/store" method="POST">
-        
-        <div class="card mb-4">
-            <div class="card-header">Thông tin phiếu nhập</div>
-            <div class="card-body">
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Thông tin hàng hóa</h6>
+        </div>
+        <div class="card-body">
+            <form action="<?php echo BASE_URL; ?>/product/store" method="POST">
+                
                 <div class="row">
                     <div class="col-md-6">
-                        <label>Nhà cung cấp:</label>
-                        <select name="maNCC" class="form-control" required>
-                            <option value="">-- Chọn NCC --</option>
-                            <?php foreach ($data['suppliers'] as $ncc): ?>
-                                <option value="<?php echo $ncc['maNCC']; ?>">
-                                    <?php echo $ncc['tenNCC']; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Mã Hàng Hóa (*)</label>
+                            <input type="text" name="maHH" class="form-control" placeholder="Ví dụ: HH001" required>
+                            <small class="text-muted">Mã hàng không được trùng nhau.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Tên Hàng Hóa (*)</label>
+                            <input type="text" name="tenHH" class="form-control" placeholder="Nhập tên sản phẩm..." required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Thương hiệu</label>
+                            <input type="text" name="thuongHieu" class="form-control" placeholder="Ví dụ: Sunhouse, Sony...">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Model</label>
+                            <input type="text" name="model" class="form-control" placeholder="Ví dụ: SHD-1234">
+                        </div>
                     </div>
+
                     <div class="col-md-6">
-                        <label>Ghi chú:</label>
-                        <input type="text" name="ghiChu" class="form-control" placeholder="Nhập ghi chú...">
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Danh Mục (*)</label>
+                            <select name="maDanhMuc" class="form-control" required>
+                                <option value="">-- Chọn danh mục --</option>
+                                <?php foreach ($data['categories'] as $cat): ?>
+                                    <option value="<?php echo $cat['maDanhMuc']; ?>">
+                                        <?php echo $cat['tenDanhMuc']; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Đơn Vị Tính (*)</label>
+                            <select name="maDVT" class="form-control" required>
+                                <option value="">-- Chọn ĐVT --</option>
+                                <?php foreach ($data['units'] as $unit): ?>
+                                    <option value="<?php echo $unit['maDVT']; ?>">
+                                        <?php echo $unit['tenDVT']; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold">Nhà Cung Cấp Mặc Định</label>
+                            <select name="maNCC" class="form-control" required>
+                                <option value="">-- Chọn NCC --</option>
+                                <?php foreach ($data['suppliers'] as $sup): ?>
+                                    <option value="<?php echo $sup['maNCC']; ?>">
+                                        <?php echo $sup['tenNCC']; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả chi tiết</label>
+                            <textarea name="moTa" class="form-control" rows="3"></textarea>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span>Chi tiết hàng nhập</span>
-                <button type="button" class="btn btn-success btn-sm" id="addRow">
-                    + Thêm dòng
-                </button>
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered" id="productTable">
-                    <thead>
-                        <tr>
-                            <th>Sản phẩm</th>
-                            <th width="150">Số lượng</th>
-                            <th width="200">Đơn giá nhập</th>
-                            <th width="100">Xóa</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <select name="product_id[]" class="form-control" required>
-                                    <option value="">-- Chọn hàng --</option>
-                                    <?php foreach ($data['products'] as $p): ?>
-                                        <option value="<?php echo $p['maHH']; ?>">
-                                            <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </td>
-                            <td>
-                                <input type="number" name="quantity[]" class="form-control" min="1" value="1" required>
-                            </td>
-                            <td>
-                                <input type="number" name="price[]" class="form-control" min="0" value="0" required>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm removeRow">Xóa</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                <hr>
+                
+                <div class="d-flex justify-content-end">
+                    <a href="<?php echo BASE_URL; ?>/product" class="btn btn-secondary me-2">Hủy bỏ</a>
+                    <button type="submit" class="btn btn-primary">Lưu Sản Phẩm</button>
+                </div>
 
-        <button type="submit" class="btn btn-primary btn-lg">Lưu Phiếu Nhập</button>
-    </form>
+            </form>
+        </div>
+    </div>
 </div>
-
-<script>
-document.getElementById('addRow').addEventListener('click', function() {
-    var table = document.getElementById('productTable').getElementsByTagName('tbody')[0];
-    var newRow = table.rows[0].cloneNode(true);
-    
-    // Reset giá trị input trong dòng mới
-    var inputs = newRow.getElementsByTagName('input');
-    for (var i = 0; i < inputs.length; i++) {
-        inputs[i].value = '';
-    }
-    
-    table.appendChild(newRow);
-});
-
-// Sự kiện xóa dòng (Dùng Event Delegation)
-document.getElementById('productTable').addEventListener('click', function(e) {
-    if (e.target && e.target.classList.contains('removeRow')) {
-        var rowCount = document.getElementById('productTable').rows.length;
-        if (rowCount > 2) { // Giữ lại ít nhất 1 dòng (1 thead + 1 tr)
-            e.target.closest('tr').remove();
-        } else {
-            alert('Phải có ít nhất một sản phẩm!');
-        }
-    }
-});
-</script>
 
 <?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>
