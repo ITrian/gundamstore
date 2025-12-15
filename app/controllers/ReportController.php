@@ -1,19 +1,32 @@
 <?php
 class ReportController extends Controller {
+    private $reportModel;
+
     public function __construct() {
         $this->requireLogin();
+        // Load Model vừa tạo
+        $this->reportModel = $this->model('ReportModel');
     }
 
     public function index() {
-        // Giả lập số liệu báo cáo
-        $stats = [
-            'doanh_thu' => 150000000,
-            'don_hang' => 45,
-            'hang_ton' => 1200,
-            'sap_het' => 5
+        // Lấy dữ liệu thật từ Database
+        $revenue = $this->reportModel->getTotalRevenue();
+        $ordersCount = $this->reportModel->countExportOrders();
+        $lowStockCount = $this->reportModel->countLowStock();
+        $topProducts = $this->reportModel->getTopSellingProducts();
+
+        // Đóng gói dữ liệu gửi sang View
+        $data = [
+            'title' => 'Báo cáo thống kê',
+            'stats' => [
+                'doanh_thu' => $revenue,
+                'don_hang' => $ordersCount,
+                'sap_het' => $lowStockCount
+            ],
+            'top_products' => $topProducts
         ];
 
-        $data = ['title' => 'Báo cáo thống kê', 'stats' => $stats];
         $this->view('report/index', $data);
     }
 }
+?>

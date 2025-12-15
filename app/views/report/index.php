@@ -3,48 +3,69 @@
 
 <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2">Báo cáo hoạt động</h1>
+        <h1 class="h2">Báo cáo hiệu quả kinh doanh</h1>
         <div class="btn-toolbar mb-2 mb-md-0">
-            <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-                Tháng này
+            <button type="button" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-calendar"></i> Toàn thời gian
             </button>
         </div>
     </div>
 
     <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2 border-primary border-3 border-top-0 border-end-0 border-bottom-0">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-start border-primary border-4 shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Doanh thu (Tháng)</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo number_format($data['stats']['doanh_thu']); ?> đ</div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
+                                Tổng Doanh Thu (Xuất kho)
+                            </div>
+                            <div class="h3 mb-0 fw-bold text-gray-800">
+                                <?php echo number_format($data['stats']['doanh_thu']); ?> ₫
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-currency-dollar fs-1 text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2 border-success border-3 border-top-0 border-end-0 border-bottom-0">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-start border-success border-4 shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Đơn hàng đã xuất</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $data['stats']['don_hang']; ?></div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
+                                Đơn hàng đã xuất
+                            </div>
+                            <div class="h3 mb-0 fw-bold text-gray-800">
+                                <?php echo number_format($data['stats']['don_hang']); ?> đơn
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-receipt fs-1 text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2 border-warning border-3 border-top-0 border-end-0 border-bottom-0">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-start border-warning border-4 shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Cảnh báo tồn kho</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo $data['stats']['sap_het']; ?> sản phẩm</div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
+                                Cảnh báo tồn kho (<= 10)
+                            </div>
+                            <div class="h3 mb-0 fw-bold text-gray-800">
+                                <?php echo number_format($data['stats']['sap_het']); ?> mã hàng
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle fs-1 text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -53,35 +74,41 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Top 5 sản phẩm bán chạy nhất</h6>
+        <div class="card-header py-3 bg-primary text-white">
+            <h6 class="m-0 fw-bold"><i class="bi bi-graph-up"></i> Top 5 Sản phẩm bán chạy nhất</h6>
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered" width="100%" cellspacing="0">
-                    <thead>
+                <table class="table table-bordered table-hover" width="100%" cellspacing="0">
+                    <thead class="table-light">
                         <tr>
                             <th>Tên sản phẩm</th>
-                            <th>Số lượng bán</th>
-                            <th>Doanh thu</th>
+                            <th class="text-center">Số lượng bán</th>
+                            <th class="text-end">Doanh thu mang lại</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>Nồi cơm điện Cuckoo</td>
-                            <td>120</td>
-                            <td>120,000,000 đ</td>
-                        </tr>
-                        <tr>
-                            <td>Chảo Sunhouse</td>
-                            <td>85</td>
-                            <td>25,000,000 đ</td>
-                        </tr>
-                        <tr>
-                            <td>Máy xay sinh tố</td>
-                            <td>60</td>
-                            <td>18,000,000 đ</td>
-                        </tr>
+                        <?php if (!empty($data['top_products'])): ?>
+                            <?php foreach ($data['top_products'] as $prod): ?>
+                            <tr>
+                                <td class="fw-bold text-dark"><?php echo $prod['tenHH']; ?></td>
+                                <td class="text-center">
+                                    <span class="badge bg-info text-dark fs-6">
+                                        <?php echo number_format($prod['totalSold']); ?>
+                                    </span>
+                                </td>
+                                <td class="text-end fw-bold text-success">
+                                    <?php echo number_format($prod['revenue']); ?> ₫
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">
+                                    Chưa có dữ liệu bán hàng. Hãy tạo phiếu xuất kho để xem báo cáo!
+                                </td>
+                            </tr>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
