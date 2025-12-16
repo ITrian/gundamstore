@@ -1,6 +1,6 @@
 <div class="d-flex">
     <div class="bg-primary text-white p-3" style="width:250px; min-height:100vh;">
-        
+
         <h5 class="text-center mb-4">
             <a href="<?php echo BASE_URL; ?>/home" class="text-white text-decoration-none">
                 KHO GIA DỤNG
@@ -11,6 +11,12 @@
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/home">
                     <i class="fas fa-home me-2"></i> Trang chủ
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/partner/supplier">
+                    <i class="fas fa-box me-2"></i> Đối tác
                 </a>
             </li>
 
