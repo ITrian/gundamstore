@@ -27,6 +27,12 @@
             </li>
 
             <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/category">
+                    <i class="fas fa-tags me-2"></i> Danh mục
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/import">
                     <i class="fas fa-download me-2"></i> Nhập kho
                 </a>
