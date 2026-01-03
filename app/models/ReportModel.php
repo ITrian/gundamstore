@@ -6,57 +6,49 @@ class ReportModel {
         $this->conn = Database::getInstance()->getConnection();
     }
 
-    // 1. Tính tổng doanh thu (Từ bảng Chi tiết phiếu xuất)
-    public function getTotalRevenue() {
-        // Tổng tiền = Số lượng * Đơn giá của tất cả các dòng xuất
-        $sql = "SELECT SUM(soLuong * donGia) as total FROM CT_PHIEUXUAT";
+    // 1. Tổng tiền nhập hàng (Chi phí) theo khoảng thời gian
+    public function getImportCost($fromDate, $toDate) {
+        $sql = "SELECT SUM(ct.soLuong * ct.donGia) as total 
+                FROM CT_PHIEUNHAP ct
+                JOIN PHIEUNHAP pn ON ct.maPN = pn.maPN
+                WHERE DATE(pn.ngayNhap) BETWEEN :fromDate AND :toDate";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'] ?? 0;
+        $stmt->execute([':fromDate' => $fromDate, ':toDate' => $toDate]);
+        return $stmt->fetch()['total'] ?? 0;
     }
 
-    // 2. Đếm số đơn hàng đã xuất
-    public function countExportOrders() {
-        $sql = "SELECT COUNT(*) as total FROM PHIEUXUAT";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'];
-    }
-
-    // 3. Đếm số mặt hàng sắp hết (Tồn kho <= 10)
-    public function countLowStock() {
-        // Dùng subquery để tính tổng tồn từng món, sau đó đếm những món <= 10
-        $sql = "SELECT COUNT(*) as total FROM (
-                    SELECT SUM(tk.soLuongTon) as tongTon 
-                    FROM HANGHOA h
-                    JOIN LOHANG lh ON h.maHH = lh.maHH
-                    JOIN TONKHO tk ON lh.maLo = tk.maLo
-                    GROUP BY h.maHH
-                    HAVING tongTon <= 10
-                ) as subquery";
-        
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'] ?? 0;
-    }
-
-    // 4. Lấy Top 5 sản phẩm bán chạy nhất
-    public function getTopSellingProducts($limit = 5) {
-        $sql = "SELECT h.tenHH, 
-                       SUM(ct.soLuong) as totalSold, 
-                       SUM(ct.soLuong * ct.donGia) as revenue
+    // 2. Tổng tiền xuất hàng (Doanh thu) theo khoảng thời gian
+    public function getExportRevenue($fromDate, $toDate) {
+        $sql = "SELECT SUM(ct.soLuong * ct.donGia) as total 
                 FROM CT_PHIEUXUAT ct
-                JOIN HANGHOA h ON ct.maHH = h.maHH
-                GROUP BY h.maHH, h.tenHH
-                ORDER BY totalSold DESC
-                LIMIT :limit";
-
+                JOIN PHIEUXUAT px ON ct.maPX = px.maPX
+                WHERE DATE(px.ngayXuat) BETWEEN :fromDate AND :toDate";
         $stmt = $this->conn->prepare($sql);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->execute();
+        $stmt->execute([':fromDate' => $fromDate, ':toDate' => $toDate]);
+        return $stmt->fetch()['total'] ?? 0;
+    }
+
+    // 3. Đếm số đơn nhập/xuất
+    public function countTransactions($table, $dateColumn, $fromDate, $toDate) {
+        $sql = "SELECT COUNT(*) as total FROM $table 
+                WHERE DATE($dateColumn) BETWEEN :fromDate AND :toDate";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':fromDate' => $fromDate, ':toDate' => $toDate]);
+        return $stmt->fetch()['total'];
+    }
+
+    // 4. Top 5 sản phẩm bán chạy nhất trong khoảng thời gian
+    public function getTopSelling($fromDate, $toDate) {
+        $sql = "SELECT h.tenHH, SUM(ct.soLuong) as soLuongBan 
+                FROM CT_PHIEUXUAT ct
+                JOIN PHIEUXUAT px ON ct.maPX = px.maPX
+                JOIN HANGHOA h ON ct.maHH = h.maHH
+                WHERE DATE(px.ngayXuat) BETWEEN :fromDate AND :toDate
+                GROUP BY h.maHH, h.tenHH
+                ORDER BY soLuongBan DESC
+                LIMIT 5";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':fromDate' => $fromDate, ':toDate' => $toDate]);
         return $stmt->fetchAll();
     }
 }
