@@ -9,18 +9,18 @@ class UserModel {
     // Lấy thông tin người dùng theo tài khoản (username)
     public function getByUsername($username) {
         try {
-            // Join bảng VAITRO để lấy tên vai trò luôn
+            // SỬA: Đổi NGUOIDUNG -> nguoidung, VAITRO -> vaitro (viết thường)
             $sql = "SELECT nd.*, vt.tenVaiTro 
-                    FROM NGUOIDUNG nd 
-                    JOIN VAITRO vt ON nd.maVaiTro = vt.maVaiTro 
+                    FROM nguoidung nd 
+                    JOIN vaitro vt ON nd.maVaiTro = vt.maVaiTro 
                     WHERE nd.taiKhoan = :username";
             
             $stmt = $this->conn->prepare($sql);
             $stmt->bindParam(':username', $username);
             $stmt->execute();
             
-            // Trả về 1 dòng dữ liệu hoặc false
-            return $stmt->fetch();
+            // Trả về mảng dữ liệu user hoặc false nếu không tìm thấy
+            return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
             return false;
         }

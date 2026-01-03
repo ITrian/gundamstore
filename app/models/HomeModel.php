@@ -6,30 +6,27 @@ class HomeModel {
         $this->conn = Database::getInstance()->getConnection();
     }
 
-    // 1. Đếm tổng số mặt hàng (Master Data)
     public function countProducts() {
-        $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM HANGHOA");
+        // Đếm số dòng trong bảng hanghoa
+        $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM hanghoa");
         $stmt->execute();
-        $result = $stmt->fetch();
-        return $result['total'];
+        return $stmt->fetch()['total'];
     }
 
-    // 2. Tính tổng số lượng tồn kho (Sum quantity)
     public function sumInventory() {
-        $stmt = $this->conn->prepare("SELECT SUM(soLuongTon) as total FROM TONKHO");
+        // SỬA: Tính tổng cột soLuong trong bảng lo_hang_vi_tri
+        $stmt = $this->conn->prepare("SELECT SUM(soLuong) as total FROM lo_hang_vi_tri");
         $stmt->execute();
         $result = $stmt->fetch();
-        return $result['total'] ?? 0; // Trả về 0 nếu null
+        return $result['total'] ?? 0;
     }
 
-    // 3. Lấy danh sách hàng sắp hết (Tồn <= 10)
     public function getLowStockProducts($limit = 5) {
-        // Query này join 3 bảng để tính tổng tồn theo từng mã hàng
-        // HAVING tongTon <= 10: Lọc ra hàng sắp hết
-        $sql = "SELECT h.maHH, h.tenHH, COALESCE(SUM(tk.soLuongTon), 0) as tongTon
-                FROM HANGHOA h
-                LEFT JOIN LOHANG lh ON h.maHH = lh.maHH
-                LEFT JOIN TONKHO tk ON lh.maLo = tk.maLo
+        // SỬA: Join 3 bảng để tính tổng tồn: hanghoa -> lohang -> lo_hang_vi_tri
+        $sql = "SELECT h.maHH, h.tenHH, COALESCE(SUM(lvt.soLuong), 0) as tongTon
+                FROM hanghoa h
+                LEFT JOIN lohang lh ON h.maHH = lh.maHH
+                LEFT JOIN lo_hang_vi_tri lvt ON lh.maLo = lvt.maLo
                 GROUP BY h.maHH, h.tenHH
                 HAVING tongTon <= 10
                 ORDER BY tongTon ASC

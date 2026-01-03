@@ -27,7 +27,6 @@ class AuthController extends Controller {
                 // Gọi Model để tìm user
                 $userModel = $this->model('UserModel');
                 $user = $userModel->getByUsername($username);
-
                 // Kiểm tra mật khẩu (Sử dụng password_verify để so sánh hash)
                 if ($user && password_verify($password, $user['matKhau'])) {
                     // Đăng nhập thành công -> Lưu Session

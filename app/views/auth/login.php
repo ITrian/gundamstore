@@ -29,7 +29,8 @@
                    <form method="post" action="<?= BASE_URL ?>/auth/login">
                         <div class="mb-3">
                             <label class="form-label">Tên đăng nhập</label>
-                            <input type="text" name="username" class="form-control" required>
+                            <input type="text" name="username" class="form-control" 
+                                value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '' ?>" required>
                         </div>
 
                         <div class="mb-3">
