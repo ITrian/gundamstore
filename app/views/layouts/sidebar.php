@@ -33,6 +33,12 @@
             </li>
 
             <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/phieudathang">
+                    <i class="fas fa-shopping-cart me-2"></i> Đặt hàng
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/import">
                     <i class="fas fa-download me-2"></i> Nhập kho
                 </a>

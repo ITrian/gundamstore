@@ -48,9 +48,10 @@
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 30%">Sản phẩm</th>
-                                <th style="width: 15%">Hạn Bảo Hành (Lô)</th>
-                                <th style="width: 15%">Số lượng</th>
-                                <th style="width: 20%">Đơn giá nhập</th>
+                                <th style="width: 12%">Hạn Bảo Hành (Lô)</th>
+                                <th style="width: 10%">Số lượng</th>
+                                <th style="width: 18%">Serials (nếu có)</th>
+                                <th style="width: 15%">Đơn giá nhập</th>
                                 <th style="width: 10%">Thành tiền</th>
                                 <th style="width: 5%">Xóa</th>
                             </tr>
@@ -58,24 +59,33 @@
                         <tbody>
                             <tr>
                                 <td>
-                                    <select name="product_id[]" class="form-select" required>
-                                        <option value="">-- Chọn hàng --</option>
-                                        <?php foreach ($data['products'] as $p): ?>
-                                            <option value="<?php echo $p['maHH']; ?>">
-                                                <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
+                                            <option value="">-- Chọn hàng --</option>
+                                            <?php foreach ($data['products'] as $p): ?>
+                                                <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
+                                                    <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <span class="badge bg-secondary type-badge">LO</span>
+                                    </div>
                                 </td>
                                <td>
-                                    <input type="date" name="expiry[]" class="form-control" 
+                                    <input type="date" name="expiry[]" class="form-control form-control-sm" 
                                         min="<?php echo date('Y-m-d'); ?>">
                                 </td>
                                 <td>
-                                    <input type="number" name="quantity[]" class="form-control qty-input" min="1" value="1" required>
+                                    <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
                                 </td>
+                                    <td style="vertical-align:top;">
+                                        <div class="d-flex">
+                                            <button type="button" class="btn btn-outline-primary btn-sm me-2 simulate-scan" title="Giả lập quét">Quét</button>
+                                            <textarea name="serials[]" class="form-control serials-input" placeholder="Nhập từng serial trên 1 dòng" style="min-height:80px; width:100%;"></textarea>
+                                        </div>
+                                    </td>
                                 <td>
-                                    <input type="number" name="price[]" class="form-control price-input" min="0" value="0" required>
+                                    <input type="number" name="price[]" class="form-control form-control-sm price-input" min="0" value="0" required>
                                 </td>
                                 <td>
                                     <input type="text" class="form-control subtotal" value="0" readonly>
@@ -115,12 +125,18 @@
             inputs[i].value = (inputs[i].type === 'number') ? 0 : '';
             if(inputs[i].name == 'quantity[]') inputs[i].value = 1;
         }
+        // Reset textarea for serials
+        var ta = newRow.querySelector('.serials-input');
+        if (ta) ta.value = '';
         
         // Reset Select box
         newRow.getElementsByTagName('select')[0].value = '';
         
         table.appendChild(newRow);
         updateEvents(); // Gán lại sự kiện tính tiền cho dòng mới
+        // Trigger change on the new select so visibility/badge updates
+        var newSelect = newRow.querySelector('select[name="product_id[]"]');
+        if (newSelect) newSelect.dispatchEvent(new Event('change'));
     });
 
     // 2. Xóa dòng
@@ -143,11 +159,57 @@
         // Lấy thêm các ô ngày hết hạn
         var dateInputs = document.querySelectorAll('input[type="date"]');
 
-        qtyInputs.forEach(input => {
-            input.addEventListener('input', calculateRow);
+        // Use assignment to avoid duplicate handlers when re-initializing
+        qtyInputs.forEach(input => { input.oninput = calculateRow; });
+        priceInputs.forEach(input => { input.oninput = calculateRow; });
+        // listen to serials changes to recalc
+        var serialInputs = document.querySelectorAll('.serials-input');
+        serialInputs.forEach(function(si){ si.oninput = calculateRow; });
+        
+    // product change: toggle serials vs quantity
+        var selects = document.querySelectorAll('select[name="product_id[]"]');
+        selects.forEach(sel => {
+            sel.onchange = function() {
+                var loai = this.options[this.selectedIndex] ? this.options[this.selectedIndex].getAttribute('data-loai') : null;
+                var tr = this.closest('tr');
+                var qty = tr.querySelector('input[name="quantity[]"]');
+                var serials = tr.querySelector('textarea[name="serials[]"]');
+                var badge = tr.querySelector('.type-badge');
+                if (loai === 'SERIAL') {
+                    if (qty) qty.style.display = 'none';
+                    if (serials) serials.parentElement.style.display = '';
+                    if (badge) { badge.innerText = 'SERIAL'; badge.className = 'badge bg-success type-badge'; }
+                } else {
+                    if (qty) qty.style.display = '';
+                    if (serials) serials.parentElement.style.display = 'none';
+                    if (badge) { badge.innerText = 'LO'; badge.className = 'badge bg-secondary type-badge'; }
+                }
+                // recalc row after changing type
+                var ev = new Event('input', { bubbles: true });
+                if (serials) serials.dispatchEvent(ev);
+                if (qty) qty.dispatchEvent(ev);
+            };
         });
-        priceInputs.forEach(input => {
-            input.addEventListener('input', calculateRow);
+
+        // simulate scan buttons
+        var simButtons = document.querySelectorAll('.simulate-scan');
+        simButtons.forEach(function(btn){
+            btn.onclick = function() {
+                var tr = btn.closest('tr');
+                var ta = tr.querySelector('.serials-input');
+                if (!ta) return;
+                // generate a fake scanned code (you may replace with prompt or external input)
+                var code = 'SCAN-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+                // append to textarea (simulate scanner entering then ENTER)
+                if (ta.value && ta.value.trim() !== '') {
+                    ta.value = ta.value.trim() + '\n' + code + '\n';
+                } else {
+                    ta.value = code + '\n';
+                }
+                // focus and dispatch input/change events so app recalculates
+                ta.focus();
+                ta.dispatchEvent(new Event('input', { bubbles: true }));
+            };
         });
         
         // --- THÊM ĐOẠN NÀY ---
@@ -165,8 +227,21 @@
 
     function calculateRow(e) {
         var row = e.target.closest('tr');
-        var qty = row.querySelector('.qty-input').value;
-        var price = row.querySelector('.price-input').value;
+        var price = parseFloat(row.querySelector('.price-input').value) || 0;
+
+        // If serials textarea is visible and has values, compute qty from serial lines
+        var serialsTa = row.querySelector('.serials-input');
+        var qty = 0;
+        if (serialsTa && serialsTa.parentElement.style.display !== 'none') {
+            var lines = serialsTa.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+            qty = lines.length;
+            // reflect qty in hidden qty input for backend
+            var qtyInput = row.querySelector('.qty-input');
+            if (qtyInput) qtyInput.value = qty;
+        } else {
+            qty = parseInt(row.querySelector('.qty-input').value) || 0;
+        }
+
         var subtotal = qty * price;
         
         // Format tiền tệ
@@ -178,8 +253,15 @@
         var total = 0;
         var rows = document.querySelectorAll('#productTable tbody tr');
         rows.forEach(row => {
-            var qty = row.querySelector('.qty-input').value || 0;
-            var price = row.querySelector('.price-input').value || 0;
+            var price = parseFloat(row.querySelector('.price-input').value) || 0;
+            var serialsTa = row.querySelector('.serials-input');
+            var qty = 0;
+            if (serialsTa && serialsTa.parentElement.style.display !== 'none') {
+                var lines = serialsTa.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+                qty = lines.length;
+            } else {
+                qty = parseInt(row.querySelector('.qty-input').value) || 0;
+            }
             total += (qty * price);
         });
         document.getElementById('grandTotal').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
@@ -187,6 +269,10 @@
 
     // Khởi chạy lần đầu
     updateEvents();
+    // Trigger change on existing selects to set correct visibility
+    document.querySelectorAll('select[name="product_id[]"]').forEach(function(s){
+        var ev = new Event('change'); s.dispatchEvent(ev);
+    });
 </script>
 
 <?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>

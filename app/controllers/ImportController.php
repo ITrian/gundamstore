@@ -53,11 +53,31 @@ class ImportController extends Controller {
             for ($i = 0; $i < $count; $i++) {
                 // Chỉ lấy dòng nào có chọn sản phẩm
                 if (!empty($_POST['product_id'][$i])) {
+                    // collect serials if present (one per line)
+                    $serialsRaw = $_POST['serials'][$i] ?? '';
+                    $serials = [];
+                    if (!empty(trim($serialsRaw))) {
+                        // split by newline or comma
+                        $lines = preg_split('/\r\n|\r|\n|,/', $serialsRaw);
+                        foreach ($lines as $ln) {
+                            $s = trim($ln);
+                            if ($s !== '') $serials[] = $s;
+                        }
+                    }
+
+                    $qty = 0;
+                    if (!empty($serials)) {
+                        $qty = count($serials);
+                    } else {
+                        $qty = (int)($_POST['quantity'][$i] ?? 0);
+                    }
+
                     $products[] = [
                         'maHH' => $_POST['product_id'][$i],
-                        'soLuong' => $_POST['quantity'][$i],
+                        'soLuong' => $qty,
                         'donGia' => $_POST['price'][$i],
-                        'hsd' => $_POST['expiry'][$i] // Hạn sử dụng (nếu có)
+                        'hsd' => $_POST['expiry'][$i] ?? null, // Hạn sử dụng (nếu có)
+                        'serials' => $serials
                     ];
                 }
             }
