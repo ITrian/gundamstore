@@ -57,6 +57,12 @@
             </li>
 
             <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/vitri">
+                    <i class="fas fa-map-marker-alt me-2"></i> Vị trí
+                </a>
+            </li>
+
+            <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/report">
                     <i class="fas fa-chart-bar me-2"></i> Báo cáo
                 </a>

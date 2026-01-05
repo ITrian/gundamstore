@@ -26,12 +26,64 @@ class ProductModel {
         return $stmt->fetchAll();
     }
 
-    public function create($data) {
-        // Insert giữ nguyên, nhưng lưu ý tên cột trong SQL mới
-        $sql = "INSERT INTO hanghoa (maHH, tenHH, maDanhMuc, maNCC, maDVT, model, thuongHieu, moTa) 
-                VALUES (:maHH, :tenHH, :maDanhMuc, :maNCC, :maDVT, :model, :thuongHieu, :moTa)";
+    public function find($id) {
+        $sql = "SELECT * FROM hanghoa WHERE maHH = :id LIMIT 1";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute($data);
+        $stmt->execute(['id' => $id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function create($data) {
+        // Insert includes loaiHang
+        $sql = "INSERT INTO hanghoa (maHH, tenHH, loaiHang, maDanhMuc, maNCC, maDVT, model, thuongHieu, moTa) 
+                VALUES (:maHH, :tenHH, :loaiHang, :maDanhMuc, :maNCC, :maDVT, :model, :thuongHieu, :moTa)";
+        $stmt = $this->conn->prepare($sql);
+        // Ensure array has loaiHang key
+        $params = [
+            ':maHH' => $data['maHH'],
+            ':tenHH' => $data['tenHH'],
+            ':loaiHang' => $data['loaiHang'] ?? 'LO',
+            ':maDanhMuc' => $data['maDanhMuc'],
+            ':maNCC' => $data['maNCC'],
+            ':maDVT' => $data['maDVT'],
+            ':model' => $data['model'],
+            ':thuongHieu' => $data['thuongHieu'],
+            ':moTa' => $data['moTa']
+        ];
+        return $stmt->execute($params);
+    }
+
+    public function update($id, $data) {
+        $sql = "UPDATE hanghoa SET tenHH = :tenHH, loaiHang = :loaiHang, maDanhMuc = :maDanhMuc,
+                maNCC = :maNCC, maDVT = :maDVT, model = :model, thuongHieu = :thuongHieu, moTa = :moTa
+                WHERE maHH = :maHH";
+        $stmt = $this->conn->prepare($sql);
+        $params = [
+            ':tenHH' => $data['tenHH'],
+            ':loaiHang' => $data['loaiHang'] ?? 'LO',
+            ':maDanhMuc' => $data['maDanhMuc'],
+            ':maNCC' => $data['maNCC'],
+            ':maDVT' => $data['maDVT'],
+            ':model' => $data['model'],
+            ':thuongHieu' => $data['thuongHieu'],
+            ':moTa' => $data['moTa'],
+            ':maHH' => $id
+        ];
+        return $stmt->execute($params);
+    }
+
+    public function delete($id) {
+        // Prevent delete if there are lots referencing this product
+        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM lohang WHERE maHH = :id");
+        $stmt->execute(['id' => $id]);
+        $cnt = $stmt->fetchColumn();
+        if ($cnt > 0) {
+            return false;
+        }
+
+        $sql = "DELETE FROM hanghoa WHERE maHH = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute(['id' => $id]);
     }
 }
 ?>

@@ -49,51 +49,49 @@
                             <tr>
                                 <th style="width: 30%">Sản phẩm</th>
                                 <th style="width: 12%">Hạn Bảo Hành (Lô)</th>
-                                <th style="width: 10%">Số lượng</th>
-                                <th style="width: 18%">Serials (nếu có)</th>
+                                <th style="width: 14%">Số lượng</th>
                                 <th style="width: 15%">Đơn giá nhập</th>
-                                <th style="width: 10%">Thành tiền</th>
-                                <th style="width: 5%">Xóa</th>
+                                <th style="width: 12%">Thành tiền</th>
+                                <th style="width: 7%">Xóa</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
-                                            <option value="">-- Chọn hàng --</option>
-                                            <?php foreach ($data['products'] as $p): ?>
-                                                <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
-                                                    <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <span class="badge bg-secondary type-badge">LO</span>
-                                    </div>
-                                </td>
-                               <td>
-                                    <input type="date" name="expiry[]" class="form-control form-control-sm" 
-                                        min="<?php echo date('Y-m-d'); ?>">
-                                </td>
-                                <td>
-                                    <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
-                                </td>
-                                    <td style="vertical-align:top;">
-                                        <div class="d-flex">
-                                            <button type="button" class="btn btn-outline-primary btn-sm me-2 simulate-scan" title="Giả lập quét">Quét</button>
-                                            <textarea name="serials[]" class="form-control serials-input" placeholder="Nhập từng serial trên 1 dòng" style="min-height:80px; width:100%;"></textarea>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
+                                                <option value="">-- Chọn hàng --</option>
+                                                <?php foreach ($data['products'] as $p): ?>
+                                                    <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
+                                                        <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <span class="badge bg-secondary type-badge">LO</span>
                                         </div>
                                     </td>
-                                <td>
-                                    <input type="number" name="price[]" class="form-control form-control-sm price-input" min="0" value="0" required>
-                                </td>
-                                <td>
-                                    <input type="text" class="form-control subtotal" value="0" readonly>
-                                </td>
-                                <td class="text-center">
-                                    <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
-                                </td>
-                            </tr>
+                                   <td>
+                                        <input type="date" name="expiry[]" class="form-control form-control-sm" 
+                                            min="<?php echo date('Y-m-d'); ?>">
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2 open-serial-modal" title="Nhập serial" style="white-space:nowrap;">Nhập serial</button>
+                                        </div>
+                                        <!-- hidden container to store serials for this row -->
+                                        <input type="hidden" name="serials[]" class="serials-hidden">
+                                    </td>
+                                    <td>
+                                        <input type="number" name="price[]" class="form-control form-control-sm price-input" min="0" value="0" required>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control subtotal" value="0" readonly>
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
+                                    </td>
+                                </tr>
                         </tbody>
                         <tfoot>
                             <tr>
@@ -125,9 +123,9 @@
             inputs[i].value = (inputs[i].type === 'number') ? 0 : '';
             if(inputs[i].name == 'quantity[]') inputs[i].value = 1;
         }
-        // Reset textarea for serials
-        var ta = newRow.querySelector('.serials-input');
-        if (ta) ta.value = '';
+    // Reset hidden serials value
+    var sh = newRow.querySelector('.serials-hidden');
+    if (sh) sh.value = '';
         
         // Reset Select box
         newRow.getElementsByTagName('select')[0].value = '';
@@ -159,12 +157,12 @@
         // Lấy thêm các ô ngày hết hạn
         var dateInputs = document.querySelectorAll('input[type="date"]');
 
-        // Use assignment to avoid duplicate handlers when re-initializing
-        qtyInputs.forEach(input => { input.oninput = calculateRow; });
-        priceInputs.forEach(input => { input.oninput = calculateRow; });
-        // listen to serials changes to recalc
-        var serialInputs = document.querySelectorAll('.serials-input');
-        serialInputs.forEach(function(si){ si.oninput = calculateRow; });
+    // Use assignment to avoid duplicate handlers when re-initializing
+    qtyInputs.forEach(input => { input.oninput = calculateRow; });
+    priceInputs.forEach(input => { input.oninput = calculateRow; });
+    // hidden serials do not drive UI directly; modal will update them
+    var serialHidden = document.querySelectorAll('.serials-hidden');
+    serialHidden.forEach(function(sh){ sh.onchange = calculateRow; });
         
     // product change: toggle serials vs quantity
         var selects = document.querySelectorAll('select[name="product_id[]"]');
@@ -173,44 +171,25 @@
                 var loai = this.options[this.selectedIndex] ? this.options[this.selectedIndex].getAttribute('data-loai') : null;
                 var tr = this.closest('tr');
                 var qty = tr.querySelector('input[name="quantity[]"]');
-                var serials = tr.querySelector('textarea[name="serials[]"]');
+                var serialBtn = tr.querySelector('.open-serial-modal');
                 var badge = tr.querySelector('.type-badge');
                 if (loai === 'SERIAL') {
-                    if (qty) qty.style.display = 'none';
-                    if (serials) serials.parentElement.style.display = '';
+                    // for serial-managed products we still show qty and allow serial input via modal
+                    if (serialBtn) serialBtn.style.display = '';
                     if (badge) { badge.innerText = 'SERIAL'; badge.className = 'badge bg-success type-badge'; }
                 } else {
-                    if (qty) qty.style.display = '';
-                    if (serials) serials.parentElement.style.display = 'none';
+                    if (serialBtn) serialBtn.style.display = 'none';
                     if (badge) { badge.innerText = 'LO'; badge.className = 'badge bg-secondary type-badge'; }
                 }
                 // recalc row after changing type
                 var ev = new Event('input', { bubbles: true });
-                if (serials) serials.dispatchEvent(ev);
                 if (qty) qty.dispatchEvent(ev);
             };
         });
 
-        // simulate scan buttons
-        var simButtons = document.querySelectorAll('.simulate-scan');
-        simButtons.forEach(function(btn){
-            btn.onclick = function() {
-                var tr = btn.closest('tr');
-                var ta = tr.querySelector('.serials-input');
-                if (!ta) return;
-                // generate a fake scanned code (you may replace with prompt or external input)
-                var code = 'SCAN-' + Date.now() + '-' + Math.floor(Math.random()*1000);
-                // append to textarea (simulate scanner entering then ENTER)
-                if (ta.value && ta.value.trim() !== '') {
-                    ta.value = ta.value.trim() + '\n' + code + '\n';
-                } else {
-                    ta.value = code + '\n';
-                }
-                // focus and dispatch input/change events so app recalculates
-                ta.focus();
-                ta.dispatchEvent(new Event('input', { bubbles: true }));
-            };
-        });
+    // serial modal open buttons
+        var serialOpenBtns = document.querySelectorAll('.open-serial-modal');
+        serialOpenBtns.forEach(function(btn){ btn.onclick = openSerialModal; });
         
         // --- THÊM ĐOẠN NÀY ---
         dateInputs.forEach(input => {
@@ -228,19 +207,8 @@
     function calculateRow(e) {
         var row = e.target.closest('tr');
         var price = parseFloat(row.querySelector('.price-input').value) || 0;
-
-        // If serials textarea is visible and has values, compute qty from serial lines
-        var serialsTa = row.querySelector('.serials-input');
-        var qty = 0;
-        if (serialsTa && serialsTa.parentElement.style.display !== 'none') {
-            var lines = serialsTa.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
-            qty = lines.length;
-            // reflect qty in hidden qty input for backend
-            var qtyInput = row.querySelector('.qty-input');
-            if (qtyInput) qtyInput.value = qty;
-        } else {
-            qty = parseInt(row.querySelector('.qty-input').value) || 0;
-        }
+        // Qty always from qty input; serials are stored in hidden input populated from modal
+        var qty = parseInt(row.querySelector('.qty-input').value) || 0;
 
         var subtotal = qty * price;
         
@@ -254,14 +222,7 @@
         var rows = document.querySelectorAll('#productTable tbody tr');
         rows.forEach(row => {
             var price = parseFloat(row.querySelector('.price-input').value) || 0;
-            var serialsTa = row.querySelector('.serials-input');
-            var qty = 0;
-            if (serialsTa && serialsTa.parentElement.style.display !== 'none') {
-                var lines = serialsTa.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
-                qty = lines.length;
-            } else {
-                qty = parseInt(row.querySelector('.qty-input').value) || 0;
-            }
+            var qty = parseInt(row.querySelector('.qty-input').value) || 0;
             total += (qty * price);
         });
         document.getElementById('grandTotal').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
@@ -273,6 +234,133 @@
     document.querySelectorAll('select[name="product_id[]"]').forEach(function(s){
         var ev = new Event('change'); s.dispatchEvent(ev);
     });
+
+    // --- Serial modal logic ---
+    // Modal elements (we'll create modal HTML below)
+    var currentRowIndex = null;
+
+    function openSerialModal(evt) {
+        var btn = (evt.currentTarget) ? evt.currentTarget : evt;
+        var tr = btn.closest('tr');
+        var table = document.querySelector('#productTable tbody');
+        // compute index of the row within tbody
+        var rows = Array.prototype.slice.call(table.querySelectorAll('tr'));
+        var idx = rows.indexOf(tr);
+        currentRowIndex = idx;
+
+        // get qty
+        var qty = parseInt(tr.querySelector('input[name="quantity[]"]').value) || 0;
+        if (qty <= 0) qty = 1;
+
+        // get existing serials from hidden input
+        var hidden = tr.querySelector('.serials-hidden');
+        var existing = [];
+        if (hidden && hidden.value.trim() !== '') {
+            existing = hidden.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+        }
+
+        renderSerialModalRows(qty, existing);
+        var modal = document.getElementById('serialModal');
+        if (modal) {
+            var bs = new bootstrap.Modal(modal);
+            bs.show();
+            modal._bs = bs;
+        }
+    }
+
+    function renderSerialModalRows(count, existing) {
+        var body = document.querySelector('#serialModal tbody');
+        body.innerHTML = '';
+        for (var i = 0; i < count; i++) {
+            var val = existing[i] || '';
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td style="width:50px">' + (i+1) + '</td>' +
+                '<td><div class="input-group"><input type="text" class="form-control serial-input" value="' + escapeHtml(val) + '" placeholder="Nhập serial"></div></td>' +
+                '<td style="width:120px"><button type="button" class="btn btn-sm btn-outline-primary scan-serial">Quét</button></td>';
+            body.appendChild(tr);
+        }
+
+        // wire scan buttons
+        document.querySelectorAll('#serialModal .scan-serial').forEach(function(b){
+            b.onclick = function(e){
+                var row = e.currentTarget.closest('tr');
+                var input = row.querySelector('.serial-input');
+                if (!input) return;
+                var code = 'SCAN-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+                input.value = code;
+            };
+        });
+    }
+
+    // Save serials from modal into hidden input of the row
+    (function(){
+        function saveHandler(){
+            var modal = document.getElementById('serialModal');
+            var rows = modal.querySelectorAll('tbody tr');
+            var vals = [];
+            rows.forEach(function(r){
+                var v = r.querySelector('.serial-input').value.trim();
+                if (v !== '') vals.push(v);
+            });
+
+            // find the row
+            var table = document.querySelector('#productTable tbody');
+            var tr = table.querySelectorAll('tr')[currentRowIndex];
+            if (tr) {
+                var hidden = tr.querySelector('.serials-hidden');
+                if (hidden) hidden.value = vals.join('\n');
+                // also update qty to match number of serials if desired
+                if (vals.length > 0) {
+                    var qtyInput = tr.querySelector('input[name="quantity[]"]');
+                    if (qtyInput) qtyInput.value = vals.length;
+                    qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            }
+
+            // hide modal
+            if (modal && modal._bs) modal._bs.hide();
+        }
+
+        var btn = document.getElementById('serialSaveBtn');
+        if (btn) {
+            btn.addEventListener('click', saveHandler);
+        } else {
+            // if not yet present, attach after DOM ready
+            document.addEventListener('DOMContentLoaded', function(){
+                var b2 = document.getElementById('serialSaveBtn');
+                if (b2) b2.addEventListener('click', saveHandler);
+            });
+        }
+    })();
+
+    // Utility: escape HTML for insertion into value
+    function escapeHtml(s) { return (s+'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 </script>
+
+<!-- Serial input modal -->
+<div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="serialModalLabel">Nhập Serials</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light"><tr><th>#</th><th>Serial</th><th></th></tr></thead>
+                        <tbody>
+                            <!-- rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="serialSaveBtn">Lưu Serials</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>

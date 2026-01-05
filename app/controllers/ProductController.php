@@ -47,6 +47,67 @@ class ProductController extends Controller {
         $this->view('products/create', $data);
     }
 
+    public function edit($id) {
+        $db = Database::getInstance()->getConnection();
+
+        // Lấy danh mục
+        $stmt = $db->query("SELECT * FROM DanhMuc");
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy đơn vị tính
+        $stmt = $db->query("SELECT * FROM DONVITINH");
+        $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Lấy NCC
+        $stmt = $db->query("SELECT * FROM NHACUNGCAP");
+        $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $product = $this->productModel->find($id);
+        if (!$product) { die('Không tìm thấy sản phẩm'); }
+
+        $data = [
+            'title' => 'Cập nhật Hàng hóa',
+            'product' => $product,
+            'categories' => $categories,
+            'units' => $units,
+            'suppliers' => $suppliers
+        ];
+
+        $this->view('products/edit', $data);
+    }
+
+    public function update() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['maHH'];
+            $data = [
+                'tenHH' => $_POST['tenHH'],
+                'loaiHang' => $_POST['loaiHang'] ?? 'LO',
+                'maDanhMuc' => $_POST['maDanhMuc'],
+                'maNCC' => $_POST['maNCC'],
+                'maDVT' => $_POST['maDVT'],
+                'model' => $_POST['model'],
+                'thuongHieu' => $_POST['thuongHieu'],
+                'moTa' => $_POST['moTa']
+            ];
+
+            if ($this->productModel->update($id, $data)) {
+                header('Location: ' . BASE_URL . '/product');
+            } else {
+                die('Lỗi cập nhật sản phẩm');
+            }
+        }
+    }
+
+    public function delete($id) {
+        // Try to delete product; model will prevent deleting if there are lots
+        if ($this->productModel->delete($id)) {
+            header('Location: ' . BASE_URL . '/product');
+        } else {
+            // If delete failed due to dependencies, redirect with error
+            header('Location: ' . BASE_URL . '/product?error=has_lots');
+        }
+    }
+
     // Xử lý lưu sản phẩm vào CSDL
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -54,6 +115,7 @@ class ProductController extends Controller {
             $data = [
                 'maHH' => $_POST['maHH'],
                 'tenHH' => $_POST['tenHH'],
+                'loaiHang' => $_POST['loaiHang'],
                 'maDanhMuc' => $_POST['maDanhMuc'],
                 'maNCC' => $_POST['maNCC'],
                 'maDVT' => $_POST['maDVT'],

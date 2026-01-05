@@ -47,8 +47,8 @@
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a href="#" class="btn btn-sm btn-outline-primary">Sửa</a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger">Xóa</a>
+                                    <a href="<?php echo BASE_URL; ?>/product/edit/<?php echo $item['maHH']; ?>" class="btn btn-sm btn-outline-primary">Sửa</a>
+                                    <a href="<?php echo BASE_URL; ?>/product/delete/<?php echo $item['maHH']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">Xóa</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

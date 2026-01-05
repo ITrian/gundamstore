@@ -116,8 +116,8 @@ class ImportModel {
 
         } catch (Exception $e) {
             $this->conn->rollBack();
-            // Uncomment để xem lỗi nếu cần: echo $e->getMessage(); die();
-            return false;
+            // Propagate exception so controller can show a clearer error message / handle it
+            throw $e;
         }
     }
 }

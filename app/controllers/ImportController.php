@@ -87,11 +87,13 @@ class ImportController extends Controller {
             }
 
             // 3. Gọi Model xử lý
-            if ($this->importModel->createImportTransaction($headerData, $products)) {
+            try {
+                $this->importModel->createImportTransaction($headerData, $products);
                 // Thành công -> Chuyển về trang danh sách nhập kho hoặc Tồn kho
                 header('Location: ' . BASE_URL . '/inventory'); 
-            } else {
-                die("Lỗi hệ thống: Không thể tạo phiếu nhập. Vui lòng thử lại.");
+            } catch (Exception $e) {
+                // Show clearer error to help debugging / inform user what to fix
+                die("Lỗi hệ thống: " . $e->getMessage());
             }
         }
     }
