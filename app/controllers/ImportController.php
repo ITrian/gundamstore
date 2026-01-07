@@ -97,5 +97,19 @@ class ImportController extends Controller {
             }
         }
     }
+
+    // Show details of a single import (phiếu nhập)
+    public function show($maPN) {
+        $data = $this->importModel->getImportById($maPN);
+        if (!$data) {
+            die('Không tìm thấy phiếu nhập: ' . htmlspecialchars($maPN));
+        }
+        $viewData = [
+            'title' => 'Chi tiết Phiếu Nhập ' . $maPN,
+            'import' => $data['header'],
+            'lines' => $data['lines']
+        ];
+        $this->view('import/show', $viewData);
+    }
 }
 ?>

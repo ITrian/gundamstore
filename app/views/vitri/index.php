@@ -11,7 +11,7 @@
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered table-sm">
-                    <thead class="table-light"><tr><th>Code</th><th>Dãy</th><th>Kệ</th><th>Ô</th><th>Hành động</th></tr></thead>
+                    <thead class="table-light"><tr><th>Code</th><th>Dãy</th><th>Kệ</th><th>Ô</th><th>Sức chứa</th><th>Trạng thái</th><th>Hành động</th></thead>
                     <tbody>
                         <?php if (!empty($data['rows'])): ?>
                             <?php foreach ($data['rows'] as $r): ?>
@@ -20,6 +20,20 @@
                                     <td><?php echo htmlspecialchars($r['day']); ?></td>
                                     <td><?php echo htmlspecialchars($r['ke']); ?></td>
                                     <td><?php echo htmlspecialchars($r['o']); ?></td>
+                                    <td><?php echo intval($r['sucChuaToiDa'] ?? 0); ?></td>
+                                    <?php
+                                        // Determine occupancy percent and map to two states: "Trống" or "Đầy"
+                                        $capacity = intval($r['sucChuaToiDa'] ?? 0);
+                                        $occupied = floatval($r['totalAtPosition'] ?? 0);
+                                        $percent = ($capacity > 0) ? round(($occupied / $capacity) * 100) : 0;
+                                        $displayPercent = min(100, max(0, intval($percent)));
+                                        if ($percent > 90) {
+                                            $statusBadge = '<span class="badge bg-danger">Đầy (' . $displayPercent . '%)</span>';
+                                        } else {
+                                            $statusBadge = '<span class="badge bg-success">Trống (' . $displayPercent . '%)</span>';
+                                        }
+                                    ?>
+                                    <td><?php echo $statusBadge; ?></td>
                                     <td>
                                         <a href="<?php echo BASE_URL; ?>/vitri/edit/<?php echo $r['maViTri']; ?>" class="btn btn-sm btn-outline-primary">Sửa</a>
                                         <a href="<?php echo BASE_URL; ?>/vitri/delete/<?php echo $r['maViTri']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Xóa vị trí?');">Xóa</a>
@@ -27,7 +41,7 @@
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="5" class="text-center text-muted">Chưa có vị trí nào.</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted">Chưa có vị trí nào.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

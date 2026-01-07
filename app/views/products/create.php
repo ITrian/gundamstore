@@ -35,6 +35,12 @@
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label">Hệ số chiếm chỗ (heSoChiemCho)</label>
+                            <input type="number" name="heSoChiemCho" class="form-control" value="1" min="1" step="1">
+                            <small class="text-muted">Số điểm chiếm chỗ trên 1 đơn vị sản phẩm. Ví dụ: Nồi cơm có 20.</small>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label class="form-label font-weight-bold">Loại quản lý hàng (*)</label>
                             <select name="loaiHang" class="form-control" required>
                                 <option value="LO">Quản lý theo LÔ</option>

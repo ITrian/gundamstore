@@ -35,14 +35,15 @@ class ProductModel {
 
     public function create($data) {
         // Insert includes loaiHang
-        $sql = "INSERT INTO hanghoa (maHH, tenHH, loaiHang, maDanhMuc, maNCC, maDVT, model, thuongHieu, moTa) 
-                VALUES (:maHH, :tenHH, :loaiHang, :maDanhMuc, :maNCC, :maDVT, :model, :thuongHieu, :moTa)";
+    $sql = "INSERT INTO hanghoa (maHH, tenHH, loaiHang, heSoChiemCho, maDanhMuc, maNCC, maDVT, model, thuongHieu, moTa) 
+        VALUES (:maHH, :tenHH, :loaiHang, :heSo, :maDanhMuc, :maNCC, :maDVT, :model, :thuongHieu, :moTa)";
         $stmt = $this->conn->prepare($sql);
         // Ensure array has loaiHang key
         $params = [
             ':maHH' => $data['maHH'],
             ':tenHH' => $data['tenHH'],
             ':loaiHang' => $data['loaiHang'] ?? 'LO',
+            ':heSo' => isset($data['heSoChiemCho']) ? (int)$data['heSoChiemCho'] : 1,
             ':maDanhMuc' => $data['maDanhMuc'],
             ':maNCC' => $data['maNCC'],
             ':maDVT' => $data['maDVT'],
@@ -54,13 +55,14 @@ class ProductModel {
     }
 
     public function update($id, $data) {
-        $sql = "UPDATE hanghoa SET tenHH = :tenHH, loaiHang = :loaiHang, maDanhMuc = :maDanhMuc,
-                maNCC = :maNCC, maDVT = :maDVT, model = :model, thuongHieu = :thuongHieu, moTa = :moTa
+    $sql = "UPDATE hanghoa SET tenHH = :tenHH, loaiHang = :loaiHang, heSoChiemCho = :heSo, maDanhMuc = :maDanhMuc,
+        maNCC = :maNCC, maDVT = :maDVT, model = :model, thuongHieu = :thuongHieu, moTa = :moTa
                 WHERE maHH = :maHH";
         $stmt = $this->conn->prepare($sql);
         $params = [
             ':tenHH' => $data['tenHH'],
             ':loaiHang' => $data['loaiHang'] ?? 'LO',
+            ':heSo' => isset($data['heSoChiemCho']) ? (int)$data['heSoChiemCho'] : 1,
             ':maDanhMuc' => $data['maDanhMuc'],
             ':maNCC' => $data['maNCC'],
             ':maDVT' => $data['maDVT'],

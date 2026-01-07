@@ -27,6 +27,13 @@
                             <input type="text" name="o" class="form-control" required value="<?php echo htmlspecialchars($data['row']['o']); ?>">
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Sức chứa tối đa</label>
+                            <input type="number" name="sucChuaToiDa" class="form-control" required value="<?php echo htmlspecialchars($data['row']['sucChuaToiDa'] ?? 100); ?>" min="1" step="1">
+                        </div>
+                    </div>
+                    <!-- trangThai input removed: trạng thái giờ là động (Trống/Đầy) tính từ mức chiếm -->
                 </div>
 
                 <div class="d-flex justify-content-end">

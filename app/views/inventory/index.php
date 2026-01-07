@@ -41,7 +41,7 @@
                <tbody>
                     <?php if (!empty($data['stocks'])): ?>
                         <?php foreach ($data['stocks'] as $item): ?>
-                        <tr>
+                            <tr>
                             <td>
                                 <span class="fw-bold"><?php echo $item['tenHH']; ?></span><br>
                                 <small class="text-muted"><?php echo $item['maHH']; ?></small>
@@ -63,11 +63,18 @@
                                 <strong><?php echo number_format($item['soLuongTon']); ?></strong>
                             </td>
                             <td>
-                                <?php if($item['soLuongTon'] <= 10): ?>
-                                    <span class="badge bg-warning text-dark">Sắp hết</span>
-                                <?php else: ?>
-                                    <span class="badge bg-success">Sẵn sàng</span>
-                                <?php endif; ?>
+                                <?php
+                                    $capacity = isset($item['sucChuaToiDa']) ? (int)$item['sucChuaToiDa'] : 100;
+                                    $totalAtPos = isset($item['totalAtPosition']) ? (int)$item['totalAtPosition'] : 0;
+                                    $percent = ($capacity > 0) ? ($totalAtPos / $capacity) * 100 : 0;
+                                    if ($percent > 90) {
+                                        echo '<span class="badge bg-danger">Đầy (' . round($percent) . '%)</span>';
+                                    } elseif ($percent == 0) {
+                                        echo '<span class="badge bg-success">Trống</span>';
+                                    } else {
+                                        echo '<span class="badge bg-warning text-dark">' . round($percent) . '%</span>';
+                                    }
+                                ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>

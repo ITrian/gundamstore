@@ -14,7 +14,11 @@ class InventoryModel {
                     hh.tenHH,
                     hh.maHH,
                     lh.hanBaoHanh,
-                    CONCAT(vt.day, '-', vt.ke, '-', vt.o) as viTriCuThe
+                    vt.maViTri,
+                    vt.sucChuaToiDa,
+                    CONCAT(vt.day, '-', vt.ke, '-', vt.o) as viTriCuThe,
+                    -- occupancy percent for that entire position (sum of all lots / capacity)
+                    (SELECT COALESCE(SUM(lvt2.soLuong),0) FROM lo_hang_vi_tri lvt2 WHERE lvt2.maViTri = vt.maViTri) as totalAtPosition
                 FROM lo_hang_vi_tri lvt
                 JOIN lohang lh ON lvt.maLo = lh.maLo
                 JOIN hanghoa hh ON lh.maHH = hh.maHH

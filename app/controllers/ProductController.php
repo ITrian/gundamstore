@@ -82,6 +82,7 @@ class ProductController extends Controller {
             $data = [
                 'tenHH' => $_POST['tenHH'],
                 'loaiHang' => $_POST['loaiHang'] ?? 'LO',
+                'heSoChiemCho' => $_POST['heSoChiemCho'] ?? 1,
                 'maDanhMuc' => $_POST['maDanhMuc'],
                 'maNCC' => $_POST['maNCC'],
                 'maDVT' => $_POST['maDVT'],
@@ -116,6 +117,7 @@ class ProductController extends Controller {
                 'maHH' => $_POST['maHH'],
                 'tenHH' => $_POST['tenHH'],
                 'loaiHang' => $_POST['loaiHang'],
+                'heSoChiemCho' => $_POST['heSoChiemCho'] ?? 1,
                 'maDanhMuc' => $_POST['maDanhMuc'],
                 'maNCC' => $_POST['maNCC'],
                 'maDVT' => $_POST['maDVT'],

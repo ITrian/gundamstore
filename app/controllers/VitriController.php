@@ -27,7 +27,13 @@ class VitriController extends Controller {
             if ($this->vitriModel->exists($ma)) {
                 die('Vị trí đã tồn tại');
             }
-            $data = ['day' => $day, 'ke' => $ke, 'o' => $o];
+            $data = [
+                'day' => $day,
+                'ke' => $ke,
+                'o' => $o,
+                'sucChuaToiDa' => isset($_POST['sucChuaToiDa']) ? (int)$_POST['sucChuaToiDa'] : 100,
+                'trangThai' => isset($_POST['trangThai']) ? (int)$_POST['trangThai'] : 1
+            ];
             if ($this->vitriModel->create($data)) {
                 header('Location: ' . BASE_URL . '/vitri');
             } else {
@@ -46,7 +52,13 @@ class VitriController extends Controller {
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['maViTri'];
-            $data = ['day' => trim($_POST['day']), 'ke' => trim($_POST['ke']), 'o' => trim($_POST['o'])];
+            $data = [
+                'day' => trim($_POST['day']),
+                'ke' => trim($_POST['ke']),
+                'o' => trim($_POST['o']),
+                'sucChuaToiDa' => isset($_POST['sucChuaToiDa']) ? (int)$_POST['sucChuaToiDa'] : 100,
+                'trangThai' => isset($_POST['trangThai']) ? (int)$_POST['trangThai'] : 1
+            ];
             if ($this->vitriModel->update($id, $data)) {
                 header('Location: ' . BASE_URL . '/vitri');
             } else {

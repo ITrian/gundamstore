@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3306
--- Thời gian đã tạo: Th1 04, 2026 lúc 06:49 AM
+-- Thời gian đã tạo: Th1 07, 2026 lúc 12:05 PM
 -- Phiên bản máy phục vụ: 9.1.0
 -- Phiên bản PHP: 8.3.14
 
@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS `ct_phieudathang` (
   PRIMARY KEY (`maDH`,`maHH`),
   KEY `fk_ctpdh_hh` (`maHH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ct_phieudathang`
+--
+
+INSERT INTO `ct_phieudathang` (`maDH`, `maHH`, `soLuong`, `donGia`) VALUES
+('PD1767511942', 'HH001', 20, 10640000.00);
 
 -- --------------------------------------------------------
 
@@ -97,6 +104,14 @@ CREATE TABLE IF NOT EXISTS `danhmuc` (
   PRIMARY KEY (`maDanhMuc`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `danhmuc`
+--
+
+INSERT INTO `danhmuc` (`maDanhMuc`, `tenDanhMuc`) VALUES
+('DM01', 'Tủ Lạnh'),
+('DM02', 'Nồi cơm điện');
+
 -- --------------------------------------------------------
 
 --
@@ -109,6 +124,24 @@ CREATE TABLE IF NOT EXISTS `donvitinh` (
   `tenDVT` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`maDVT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `donvitinh`
+--
+
+INSERT INTO `donvitinh` (`maDVT`, `tenDVT`) VALUES
+('DVT01', 'Cái'),
+('DVT02', 'Chiếc'),
+('DVT03', 'Bộ'),
+('DVT04', 'Hộp'),
+('DVT05', 'Thùng'),
+('DVT06', 'Cặp'),
+('DVT07', 'Cuộn'),
+('DVT08', 'Mét'),
+('DVT09', 'Vỉ'),
+('DVT10', 'Lốc'),
+('DVT11', 'Túi'),
+('DVT12', 'Bao');
 
 -- --------------------------------------------------------
 
@@ -127,11 +160,21 @@ CREATE TABLE IF NOT EXISTS `hanghoa` (
   `moTa` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `maDanhMuc` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `loaiHang` enum('LO','SERIAL') COLLATE utf8mb4_unicode_ci DEFAULT 'LO',
+  `heSoChiemCho` int DEFAULT '1',
   PRIMARY KEY (`maHH`),
   KEY `fk_hanghoa_dvt` (`maDVT`),
   KEY `fk_hanghoa_ncc` (`maNCC`),
   KEY `fk_hanghoa_danhmuc` (`maDanhMuc`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `hanghoa`
+--
+
+INSERT INTO `hanghoa` (`maHH`, `tenHH`, `maDVT`, `maNCC`, `thuongHieu`, `model`, `moTa`, `maDanhMuc`, `loaiHang`, `heSoChiemCho`) VALUES
+('1', '1', 'DVT01', 'NCC1', '1', '1', '1', 'DM01', 'LO', 1),
+('HH001', 'Tủ lạnh aqua inverter', 'DVT01', 'NCC1', 'AQUA', 'AQR-B390MA', 'Ngăn đá dưới - 2 cánh\r\nDung tích tổng: 350 lít\r\nDung tích sử dụng: 324 lít - 3 - 4 người\r\nDung tích ngăn đá: 91 lít\r\nDung tích ngăn lạnh: 199 lít\r\nDung tích ngăn chuyển đổi: 34 lít\r\nChất liệu cửa tủ lạnh: Mặt thép\r\nChất liệu khay ngăn lạnh: Kính chịu lực\r\nChất liệu ống dẫn gas, dàn lạnh: Ống dẫn gas', 'DM01', 'SERIAL', 1),
+('HH003', 'Nồi cơm điện toshiba', 'DVT01', 'NCC1', 'toshiba', 'rc-10jfmvn', '', 'DM02', 'SERIAL', 1);
 
 -- --------------------------------------------------------
 
@@ -248,6 +291,13 @@ CREATE TABLE IF NOT EXISTS `nhacungcap` (
   PRIMARY KEY (`maNCC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `nhacungcap`
+--
+
+INSERT INTO `nhacungcap` (`maNCC`, `tenNCC`, `diaChi`, `sdt`, `email`, `trangThai`) VALUES
+('NCC1', 'Cuckoo', '180 cao lỗ p. chánh hưng tp.hcm', '123', 'Cuckoo@group.com', 1);
+
 -- --------------------------------------------------------
 
 --
@@ -285,6 +335,13 @@ CREATE TABLE IF NOT EXISTS `phieudathang` (
   KEY `fk_pdh_ncc` (`maNCC`),
   KEY `fk_pdh_nd` (`maND`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `phieudathang`
+--
+
+INSERT INTO `phieudathang` (`maDH`, `ngayDatHang`, `maNCC`, `trangThai`, `maND`) VALUES
+('PD1767511942', '2026-01-04 07:32:22', 'NCC1', 0, 'ND01');
 
 -- --------------------------------------------------------
 
@@ -336,6 +393,20 @@ CREATE TABLE IF NOT EXISTS `phieuxuat` (
   PRIMARY KEY (`maPX`),
   KEY `fk_px_kh` (`maKH`),
   KEY `fk_px_nd` (`maNDXuat`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `phieuxuat_serial`
+--
+
+DROP TABLE IF EXISTS `phieuxuat_serial`;
+CREATE TABLE IF NOT EXISTS `phieuxuat_serial` (
+  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `serial` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`maPX`,`serial`),
+  KEY `fk_pxs_serial` (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -427,8 +498,17 @@ CREATE TABLE IF NOT EXISTS `vitri` (
   `day` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ke` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `o` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `trangThai` enum('TRONG','DAY') COLLATE utf8mb4_unicode_ci DEFAULT 'TRONG' COMMENT 'Trạng thái kệ',
+  `sucChuaToiDa` int DEFAULT '100' COMMENT 'Số lượng tối đa có thể chứa',
   PRIMARY KEY (`maViTri`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `vitri`
+--
+
+INSERT INTO `vitri` (`maViTri`, `day`, `ke`, `o`, `trangThai`, `sucChuaToiDa`) VALUES
+('A-1-1', 'A', '1', '1', 'TRONG', 100);
 
 --
 -- Các ràng buộc cho các bảng đã đổ
@@ -530,6 +610,13 @@ ALTER TABLE `phieunhap`
 ALTER TABLE `phieuxuat`
   ADD CONSTRAINT `fk_px_kh` FOREIGN KEY (`maKH`) REFERENCES `khachhang` (`maKH`),
   ADD CONSTRAINT `fk_px_nd` FOREIGN KEY (`maNDXuat`) REFERENCES `nguoidung` (`maND`);
+
+--
+-- Các ràng buộc cho bảng `phieuxuat_serial`
+--
+ALTER TABLE `phieuxuat_serial`
+  ADD CONSTRAINT `fk_pxs_px` FOREIGN KEY (`maPX`) REFERENCES `phieuxuat` (`maPX`),
+  ADD CONSTRAINT `fk_pxs_serial` FOREIGN KEY (`serial`) REFERENCES `hanghoa_serial` (`serial`);
 
 --
 -- Các ràng buộc cho bảng `quyen_vaitro`

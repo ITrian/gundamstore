@@ -41,6 +41,11 @@
                                 <option value="SERIAL" <?php echo ($data['product']['loaiHang'] === 'SERIAL') ? 'selected' : ''; ?>>Quản lý theo SERIAL</option>
                             </select>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Hệ số chiếm chỗ (heSoChiemCho)</label>
+                            <input type="number" name="heSoChiemCho" class="form-control" value="<?php echo htmlspecialchars($data['product']['heSoChiemCho'] ?? 1); ?>" min="1" step="1">
+                        </div>
                     </div>
 
                     <div class="col-md-6">

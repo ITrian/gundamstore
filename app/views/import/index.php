@@ -35,7 +35,7 @@
                                 <td><?php echo $item['tenND']; ?></td>
                                 <td><?php echo $item['ghiChu']; ?></td>
                                 <td>
-                                    <button class="btn btn-sm btn-info text-white">Chi tiết</button>
+                                    <a href="<?php echo BASE_URL; ?>/import/show/<?php echo urlencode($item['maPN']); ?>" class="btn btn-sm btn-info text-white">Chi tiết</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
