@@ -61,6 +61,11 @@
                     <i class="fas fa-map-marker-alt me-2"></i> Vị trí
                 </a>
             </li>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/warranty">
+                    <i class="fas fa-shield-alt me-2"></i> Bảo hành
+                </a>
+            </li>
 
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/report">

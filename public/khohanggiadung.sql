@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3306
--- Thời gian đã tạo: Th1 07, 2026 lúc 12:05 PM
+-- Thời gian đã tạo: Th1 09, 2026 lúc 03:06 AM
 -- Phiên bản máy phục vụ: 9.1.0
 -- Phiên bản PHP: 8.3.14
 
@@ -29,8 +29,8 @@ SET time_zone = "+00:00";
 
 DROP TABLE IF EXISTS `ct_phieudathang`;
 CREATE TABLE IF NOT EXISTS `ct_phieudathang` (
-  `maDH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maDH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuong` int NOT NULL,
   `donGia` decimal(18,2) DEFAULT NULL,
   PRIMARY KEY (`maDH`,`maHH`),
@@ -52,8 +52,8 @@ INSERT INTO `ct_phieudathang` (`maDH`, `maHH`, `soLuong`, `donGia`) VALUES
 
 DROP TABLE IF EXISTS `ct_phieukiemke`;
 CREATE TABLE IF NOT EXISTS `ct_phieukiemke` (
-  `maKK` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maKK` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuongThucTe` int NOT NULL,
   PRIMARY KEY (`maKK`,`maHH`),
   KEY `fk_ctkk_hh` (`maHH`)
@@ -67,13 +67,21 @@ CREATE TABLE IF NOT EXISTS `ct_phieukiemke` (
 
 DROP TABLE IF EXISTS `ct_phieunhap`;
 CREATE TABLE IF NOT EXISTS `ct_phieunhap` (
-  `maPN` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maPN` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuong` int NOT NULL,
   `donGia` decimal(18,2) DEFAULT NULL,
   PRIMARY KEY (`maPN`,`maHH`),
   KEY `fk_ctpn_hh` (`maHH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ct_phieunhap`
+--
+
+INSERT INTO `ct_phieunhap` (`maPN`, `maHH`, `soLuong`, `donGia`) VALUES
+('PN1767927255', 'HH004', 5, 500000.00),
+('PN1767927898', 'HH005', 1, 5000000.00);
 
 -- --------------------------------------------------------
 
@@ -83,8 +91,8 @@ CREATE TABLE IF NOT EXISTS `ct_phieunhap` (
 
 DROP TABLE IF EXISTS `ct_phieuxuat`;
 CREATE TABLE IF NOT EXISTS `ct_phieuxuat` (
-  `maPX` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuong` int NOT NULL,
   `donGia` decimal(18,2) DEFAULT NULL,
   PRIMARY KEY (`maPX`,`maHH`),
@@ -99,8 +107,8 @@ CREATE TABLE IF NOT EXISTS `ct_phieuxuat` (
 
 DROP TABLE IF EXISTS `danhmuc`;
 CREATE TABLE IF NOT EXISTS `danhmuc` (
-  `maDanhMuc` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenDanhMuc` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maDanhMuc` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenDanhMuc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`maDanhMuc`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -110,7 +118,9 @@ CREATE TABLE IF NOT EXISTS `danhmuc` (
 
 INSERT INTO `danhmuc` (`maDanhMuc`, `tenDanhMuc`) VALUES
 ('DM01', 'Tủ Lạnh'),
-('DM02', 'Nồi cơm điện');
+('DM02', 'Nồi cơm điện'),
+('DM03', 'Bếp Điện'),
+('DM04', 'Máy lạnh');
 
 -- --------------------------------------------------------
 
@@ -120,8 +130,8 @@ INSERT INTO `danhmuc` (`maDanhMuc`, `tenDanhMuc`) VALUES
 
 DROP TABLE IF EXISTS `donvitinh`;
 CREATE TABLE IF NOT EXISTS `donvitinh` (
-  `maDVT` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenDVT` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maDVT` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenDVT` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`maDVT`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -151,15 +161,15 @@ INSERT INTO `donvitinh` (`maDVT`, `tenDVT`) VALUES
 
 DROP TABLE IF EXISTS `hanghoa`;
 CREATE TABLE IF NOT EXISTS `hanghoa` (
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenHH` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maDVT` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maNCC` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `thuongHieu` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `model` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `moTa` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `maDanhMuc` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `loaiHang` enum('LO','SERIAL') COLLATE utf8mb4_unicode_ci DEFAULT 'LO',
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenHH` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maDVT` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maNCC` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `thuongHieu` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `model` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `moTa` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maDanhMuc` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `loaiHang` enum('LO','SERIAL') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'LO',
   `heSoChiemCho` int DEFAULT '1',
   PRIMARY KEY (`maHH`),
   KEY `fk_hanghoa_dvt` (`maDVT`),
@@ -174,7 +184,9 @@ CREATE TABLE IF NOT EXISTS `hanghoa` (
 INSERT INTO `hanghoa` (`maHH`, `tenHH`, `maDVT`, `maNCC`, `thuongHieu`, `model`, `moTa`, `maDanhMuc`, `loaiHang`, `heSoChiemCho`) VALUES
 ('1', '1', 'DVT01', 'NCC1', '1', '1', '1', 'DM01', 'LO', 1),
 ('HH001', 'Tủ lạnh aqua inverter', 'DVT01', 'NCC1', 'AQUA', 'AQR-B390MA', 'Ngăn đá dưới - 2 cánh\r\nDung tích tổng: 350 lít\r\nDung tích sử dụng: 324 lít - 3 - 4 người\r\nDung tích ngăn đá: 91 lít\r\nDung tích ngăn lạnh: 199 lít\r\nDung tích ngăn chuyển đổi: 34 lít\r\nChất liệu cửa tủ lạnh: Mặt thép\r\nChất liệu khay ngăn lạnh: Kính chịu lực\r\nChất liệu ống dẫn gas, dàn lạnh: Ống dẫn gas', 'DM01', 'SERIAL', 1),
-('HH003', 'Nồi cơm điện toshiba', 'DVT01', 'NCC1', 'toshiba', 'rc-10jfmvn', '', 'DM02', 'SERIAL', 1);
+('HH003', 'Nồi cơm điện toshiba', 'DVT01', 'NCC1', 'toshiba', 'rc-10jfmvn', '', 'DM02', 'SERIAL', 1),
+('HH004', 'Bếp từ', 'DVT01', 'SH', 'Sunhouse', 'SH-003', '', 'DM03', 'LO', 1),
+('HH005', 'Máy lạnh 1 ngựa', 'DVT02', 'PNSN', 'Panasonic', 'PNSN-0054', '', 'DM04', 'SERIAL', 1);
 
 -- --------------------------------------------------------
 
@@ -184,14 +196,21 @@ INSERT INTO `hanghoa` (`maHH`, `tenHH`, `maDVT`, `maNCC`, `thuongHieu`, `model`,
 
 DROP TABLE IF EXISTS `hanghoa_serial`;
 CREATE TABLE IF NOT EXISTS `hanghoa_serial` (
-  `serial` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maLo` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `serial` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maLo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `trangThai` int DEFAULT '1',
-  `maViTri` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maViTri` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`serial`),
   KEY `fk_hhs_lo` (`maLo`),
   KEY `fk_hhs_vitri` (`maViTri`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `hanghoa_serial`
+--
+
+INSERT INTO `hanghoa_serial` (`serial`, `maLo`, `trangThai`, `maViTri`) VALUES
+('SCAN-1767927878404-986', 'LO-PN1767927898-HH00', 1, 'A-1-1');
 
 -- --------------------------------------------------------
 
@@ -201,11 +220,11 @@ CREATE TABLE IF NOT EXISTS `hanghoa_serial` (
 
 DROP TABLE IF EXISTS `khachhang`;
 CREATE TABLE IF NOT EXISTS `khachhang` (
-  `maKH` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenKH` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `diaChi` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `sdt` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maKH` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenKH` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `diaChi` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sdt` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `trangThai` tinyint DEFAULT '1',
   PRIMARY KEY (`maKH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -218,9 +237,9 @@ CREATE TABLE IF NOT EXISTS `khachhang` (
 
 DROP TABLE IF EXISTS `lohang`;
 CREATE TABLE IF NOT EXISTS `lohang` (
-  `maLo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maPN` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maLo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maPN` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuongNhap` int NOT NULL,
   `ngayNhap` date NOT NULL,
   `hanBaoHanh` date DEFAULT NULL,
@@ -228,6 +247,14 @@ CREATE TABLE IF NOT EXISTS `lohang` (
   KEY `fk_lo_pn` (`maPN`),
   KEY `fk_lo_hh` (`maHH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `lohang`
+--
+
+INSERT INTO `lohang` (`maLo`, `maPN`, `maHH`, `soLuongNhap`, `ngayNhap`, `hanBaoHanh`) VALUES
+('LO-PN1767927255-HH00', 'PN1767927255', 'HH004', 5, '2026-01-09', '2027-01-09'),
+('LO-PN1767927898-HH00', 'PN1767927898', 'HH005', 1, '2026-01-09', '2027-01-09');
 
 -- --------------------------------------------------------
 
@@ -238,13 +265,21 @@ CREATE TABLE IF NOT EXISTS `lohang` (
 DROP TABLE IF EXISTS `lo_hang_vi_tri`;
 CREATE TABLE IF NOT EXISTS `lo_hang_vi_tri` (
   `maLVT` int NOT NULL AUTO_INCREMENT,
-  `maLo` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maViTri` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maLo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maViTri` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuong` int NOT NULL,
   PRIMARY KEY (`maLVT`),
   KEY `fk_lvt_lo` (`maLo`),
   KEY `fk_lvt_vitri` (`maViTri`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `lo_hang_vi_tri`
+--
+
+INSERT INTO `lo_hang_vi_tri` (`maLVT`, `maLo`, `maViTri`, `soLuong`) VALUES
+(1, 'LO-PN1767927255-HH00', 'A-1-1', 5),
+(2, 'LO-PN1767927898-HH00', 'A-1-1', 1);
 
 -- --------------------------------------------------------
 
@@ -254,13 +289,13 @@ CREATE TABLE IF NOT EXISTS `lo_hang_vi_tri` (
 
 DROP TABLE IF EXISTS `nguoidung`;
 CREATE TABLE IF NOT EXISTS `nguoidung` (
-  `maND` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenND` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `email` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `sdt` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `taiKhoan` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `matKhau` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maVaiTro` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maND` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenND` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sdt` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `taiKhoan` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `matKhau` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maVaiTro` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`maND`),
   UNIQUE KEY `taiKhoan` (`taiKhoan`),
   KEY `fk_nguoidung_vaitro` (`maVaiTro`)
@@ -282,11 +317,11 @@ INSERT INTO `nguoidung` (`maND`, `tenND`, `email`, `sdt`, `taiKhoan`, `matKhau`,
 
 DROP TABLE IF EXISTS `nhacungcap`;
 CREATE TABLE IF NOT EXISTS `nhacungcap` (
-  `maNCC` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenNCC` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `diaChi` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `sdt` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `email` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maNCC` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenNCC` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `diaChi` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `sdt` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `trangThai` tinyint DEFAULT '1',
   PRIMARY KEY (`maNCC`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -296,7 +331,9 @@ CREATE TABLE IF NOT EXISTS `nhacungcap` (
 --
 
 INSERT INTO `nhacungcap` (`maNCC`, `tenNCC`, `diaChi`, `sdt`, `email`, `trangThai`) VALUES
-('NCC1', 'Cuckoo', '180 cao lỗ p. chánh hưng tp.hcm', '123', 'Cuckoo@group.com', 1);
+('NCC1', 'Cuckoo', '180 cao lỗ p. chánh hưng tp.hcm', '123', 'Cuckoo@group.com', 1),
+('PNSN', 'Panasonic', '180 Cao lỗ, p4, q8, tphcm', '1241242142141241', 'Panasonic@gmail.com', 1),
+('SH', 'SunHouse', '180 Cao lỗ, p4, q8, tphcm', '1234124124', 'SunHouse@gmail.com', 1);
 
 -- --------------------------------------------------------
 
@@ -306,17 +343,27 @@ INSERT INTO `nhacungcap` (`maNCC`, `tenNCC`, `diaChi`, `sdt`, `email`, `trangTha
 
 DROP TABLE IF EXISTS `phieubh`;
 CREATE TABLE IF NOT EXISTS `phieubh` (
-  `maBH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `serial` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maBH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `serial` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ngayNhan` datetime DEFAULT CURRENT_TIMESTAMP,
   `ngayTra` datetime DEFAULT NULL,
-  `moTaLoi` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `moTaLoi` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `trangThai` int DEFAULT '0',
-  `maND` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maND` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maBH`),
   KEY `fk_bh_serial` (`serial`),
   KEY `fk_bh_nd` (`maND`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `phieubh`
+--
+
+INSERT INTO `phieubh` (`maBH`, `serial`, `ngayNhan`, `ngayTra`, `moTaLoi`, `trangThai`, `maND`) VALUES
+('BH1767927449', 'LO-PN1767927255-HH00', '2026-01-09 09:57:29', NULL, 'bản mạch của bếp bị lỗi do nhà sản xuất', 0, 'ND01'),
+('BH1767927463', 'LO-PN1767927255-HH00', '2026-01-09 09:57:43', NULL, '3213', 0, 'ND01'),
+('BH1767927651', 'LO-PN1767927255-HH00', '2026-01-09 10:00:51', NULL, '12345', 0, 'ND01'),
+('BH1767927938', 'SCAN-1767927878404-986', '2026-01-09 10:05:38', NULL, 'máy lạnh nhugnw k  llanhj', 0, 'ND01');
 
 -- --------------------------------------------------------
 
@@ -326,11 +373,11 @@ CREATE TABLE IF NOT EXISTS `phieubh` (
 
 DROP TABLE IF EXISTS `phieudathang`;
 CREATE TABLE IF NOT EXISTS `phieudathang` (
-  `maDH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maDH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ngayDatHang` datetime DEFAULT CURRENT_TIMESTAMP,
-  `maNCC` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maNCC` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `trangThai` int DEFAULT '0',
-  `maND` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maND` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maDH`),
   KEY `fk_pdh_ncc` (`maNCC`),
   KEY `fk_pdh_nd` (`maND`)
@@ -351,10 +398,10 @@ INSERT INTO `phieudathang` (`maDH`, `ngayDatHang`, `maNCC`, `trangThai`, `maND`)
 
 DROP TABLE IF EXISTS `phieukiemke`;
 CREATE TABLE IF NOT EXISTS `phieukiemke` (
-  `maKK` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maKK` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ngayKK` datetime DEFAULT CURRENT_TIMESTAMP,
-  `ghiChu` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `maND` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ghiChu` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maND` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maKK`),
   KEY `fk_pkk_nd` (`maND`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -367,15 +414,23 @@ CREATE TABLE IF NOT EXISTS `phieukiemke` (
 
 DROP TABLE IF EXISTS `phieunhap`;
 CREATE TABLE IF NOT EXISTS `phieunhap` (
-  `maPN` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maPN` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ngayNhap` datetime DEFAULT CURRENT_TIMESTAMP,
-  `maNCC` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ghiChu` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `maND` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maNCC` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ghiChu` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maND` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maPN`),
   KEY `fk_pn_ncc` (`maNCC`),
   KEY `fk_pn_nd` (`maND`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `phieunhap`
+--
+
+INSERT INTO `phieunhap` (`maPN`, `ngayNhap`, `maNCC`, `ghiChu`, `maND`) VALUES
+('PN1767927255', '2026-01-09 09:54:15', 'SH', 'Nhập hàng đầu năm', 'ND01'),
+('PN1767927898', '2026-01-09 10:04:58', 'PNSN', 'Nhập hàng đầu năm', 'ND01');
 
 -- --------------------------------------------------------
 
@@ -385,11 +440,11 @@ CREATE TABLE IF NOT EXISTS `phieunhap` (
 
 DROP TABLE IF EXISTS `phieuxuat`;
 CREATE TABLE IF NOT EXISTS `phieuxuat` (
-  `maPX` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `ngayXuat` datetime DEFAULT CURRENT_TIMESTAMP,
-  `maKH` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ghiChu` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `maNDXuat` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maKH` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ghiChu` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maNDXuat` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maPX`),
   KEY `fk_px_kh` (`maKH`),
   KEY `fk_px_nd` (`maNDXuat`)
@@ -417,9 +472,9 @@ CREATE TABLE IF NOT EXISTS `phieuxuat_serial` (
 
 DROP TABLE IF EXISTS `quyen`;
 CREATE TABLE IF NOT EXISTS `quyen` (
-  `maQuyen` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenQuyen` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `moTa` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maQuyen` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenQuyen` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `moTa` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maQuyen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -443,8 +498,8 @@ INSERT INTO `quyen` (`maQuyen`, `tenQuyen`, `moTa`) VALUES
 
 DROP TABLE IF EXISTS `quyen_vaitro`;
 CREATE TABLE IF NOT EXISTS `quyen_vaitro` (
-  `maVaiTro` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maQuyen` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maVaiTro` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maQuyen` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`maVaiTro`,`maQuyen`),
   KEY `fk_qvt_quyen` (`maQuyen`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -472,9 +527,9 @@ INSERT INTO `quyen_vaitro` (`maVaiTro`, `maQuyen`) VALUES
 
 DROP TABLE IF EXISTS `vaitro`;
 CREATE TABLE IF NOT EXISTS `vaitro` (
-  `maVaiTro` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tenVaiTro` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `moTa` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `maVaiTro` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tenVaiTro` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `moTa` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`maVaiTro`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -494,11 +549,11 @@ INSERT INTO `vaitro` (`maVaiTro`, `tenVaiTro`, `moTa`) VALUES
 
 DROP TABLE IF EXISTS `vitri`;
 CREATE TABLE IF NOT EXISTS `vitri` (
-  `maViTri` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `day` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ke` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `o` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `trangThai` enum('TRONG','DAY') COLLATE utf8mb4_unicode_ci DEFAULT 'TRONG' COMMENT 'Trạng thái kệ',
+  `maViTri` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `day` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ke` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `o` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `trangThai` enum('TRONG','DAY') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'TRONG' COMMENT 'Trạng thái kệ',
   `sucChuaToiDa` int DEFAULT '100' COMMENT 'Số lượng tối đa có thể chứa',
   PRIMARY KEY (`maViTri`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -581,8 +636,7 @@ ALTER TABLE `nguoidung`
 -- Các ràng buộc cho bảng `phieubh`
 --
 ALTER TABLE `phieubh`
-  ADD CONSTRAINT `fk_bh_nd` FOREIGN KEY (`maND`) REFERENCES `nguoidung` (`maND`),
-  ADD CONSTRAINT `fk_bh_serial` FOREIGN KEY (`serial`) REFERENCES `hanghoa_serial` (`serial`);
+  ADD CONSTRAINT `fk_bh_nd` FOREIGN KEY (`maND`) REFERENCES `nguoidung` (`maND`);
 
 --
 -- Các ràng buộc cho bảng `phieudathang`
