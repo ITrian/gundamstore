@@ -16,11 +16,11 @@
                     <thead class="table-light">
                         <tr>
                             <th>Mã PX</th>
-                            <th>Khách hàng</th>
-                            <th>Ngày xuất</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Hành động</th>
+                            <th>Ngày Xuất</th>
+                            <th>Khách Hàng</th>
+                            <th>Nhân viên thực hiện</th>
+                            <th>Ghi Chú</th>
+                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>

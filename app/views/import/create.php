@@ -51,47 +51,58 @@
                                 <th style="width: 12%">Hạn Bảo Hành (Lô)</th>
                                 <th style="width: 14%">Số lượng</th>
                                 <th style="width: 15%">Đơn giá nhập</th>
+                                <th style="width: 14%">Vị trí nhập</th>
                                 <th style="width: 12%">Thành tiền</th>
                                 <th style="width: 7%">Xóa</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
-                                                <option value="">-- Chọn hàng --</option>
-                                                <?php foreach ($data['products'] as $p): ?>
-                                                    <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
-                                                        <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <span class="badge bg-secondary type-badge">LO</span>
-                                        </div>
-                                    </td>
-                                   <td>
-                                        <input type="date" name="expiry[]" class="form-control form-control-sm" 
-                                            min="<?php echo date('Y-m-d'); ?>">
-                                    </td>
-                                    <td>
-                                        <div class="input-group">
-                                            <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm ms-2 open-serial-modal" title="Nhập serial" style="white-space:nowrap;">Nhập serial</button>
-                                        </div>
-                                        <!-- hidden container to store serials for this row -->
-                                        <input type="hidden" name="serials[]" class="serials-hidden">
-                                    </td>
-                                    <td>
-                                        <input type="number" name="price[]" class="form-control form-control-sm price-input" min="0" value="0" required>
-                                    </td>
-                                    <td>
-                                        <input type="text" class="form-control subtotal" value="0" readonly>
-                                    </td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
-                                    </td>
-                                </tr>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
+                                            <option value="">-- Chọn hàng --</option>
+                                            <?php foreach ($data['products'] as $p): ?>
+                                                <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
+                                                    <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <span class="badge bg-secondary type-badge">LO</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input type="date" name="expiry[]" class="form-control form-control-sm" min="<?php echo date('Y-m-d'); ?>">
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2 open-serial-modal" title="Nhập serial" style="white-space:nowrap;">Nhập serial</button>
+                                    </div>
+                                    <input type="hidden" name="serials[]" class="serials-hidden">
+                                </td>
+                                <td>
+                                    <input type="number" name="price[]" class="form-control form-control-sm price-input" min="0" value="0" required>
+                                </td>
+                                <td>
+                                    <select name="vitri[]" class="form-select form-select-sm" required>
+                                        <option value="">-- Chọn vị trí --</option>
+                                        <?php if (!empty($data['vitri'])): ?>
+                                            <?php foreach ($data['vitri'] as $vt): ?>
+                                                <option value="<?php echo $vt['maViTri']; ?>">
+                                                    <?php echo $vt['maViTri']; ?> (<?php echo $vt['day'].'-'.$vt['ke'].'-'.$vt['o']; ?>)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" class="form-control subtotal" value="0" readonly>
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-danger btn-sm removeRow">X</button>
+                                </td>
+                            </tr>
                         </tbody>
                         <tfoot>
                             <tr>

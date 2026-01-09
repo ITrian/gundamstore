@@ -21,7 +21,16 @@ class ExportController extends Controller {
     
     // Giữ nguyên hàm create của bạn
     public function create() {
-        $data = ['title' => 'Tạo phiếu xuất kho'];
+        $partnerModel = $this->model('PartnerModel');
+        $productModel = $this->model('ProductModel');
+        $vitriModel = $this->model('VitriModel');
+
+        $data = [
+            'title' => 'Tạo phiếu xuất kho',
+            'customers' => $partnerModel->getCustomers(),
+            'products' => $productModel->getAll(),
+            'vitri' => $vitriModel->getAll()
+        ];
         $this->view('export/create', $data);
     }
 }

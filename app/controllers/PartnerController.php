@@ -52,41 +52,35 @@ class PartnerController extends Controller {
     // Hàm chung xử lý lưu (để đỡ viết lặp code)
     private function store_partner($type) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'ma' => $_POST['code'],
-                'tenNCC' => $_POST['name'], // Model cần đúng key cột DB
-                'tenKH' => $_POST['name'],  // Model cần đúng key cột DB
-                'diaChi' => $_POST['address'],
-                'sdt' => $_POST['phone'],
-                'email' => $_POST['email']
-            ];
-
-            // Map lại mảng data cho đúng hàm add của Model
-            $insertData = [
-                'diaChi' => $data['diaChi'],
-                'sdt' => $data['sdt'],
-                'email' => $data['email']
-            ];
-
+            // Sinh mã tự động
             if ($type == 'supplier') {
                 $table = 'NHACUNGCAP';
                 $col = 'maNCC';
-                $insertData['maNCC'] = $data['ma'];
-                $insertData['tenNCC'] = $data['tenNCC'];
-                
-                if ($this->partnerModel->checkExists($table, $col, $data['ma'])) { die('Mã đã tồn tại!'); }
+                // Lấy mã lớn nhất hiện tại
+                $max = $this->partnerModel->getMaxCode($table, $col, 'NCC');
+                $newCode = 'NCC' . str_pad($max + 1, 3, '0', STR_PAD_LEFT);
+                $insertData = [
+                    'maNCC' => $newCode,
+                    'tenNCC' => $_POST['name'],
+                    'diaChi' => $_POST['address'],
+                    'sdt' => $_POST['phone'],
+                    'email' => $_POST['email']
+                ];
                 $this->partnerModel->addSupplier($insertData);
-
             } else {
                 $table = 'KHACHHANG';
                 $col = 'maKH';
-                $insertData['maKH'] = $data['ma'];
-                $insertData['tenKH'] = $data['tenKH'];
-
-                if ($this->partnerModel->checkExists($table, $col, $data['ma'])) { die('Mã đã tồn tại!'); }
+                $max = $this->partnerModel->getMaxCode($table, $col, 'KH');
+                $newCode = 'KH' . str_pad($max + 1, 5, '0', STR_PAD_LEFT);
+                $insertData = [
+                    'maKH' => $newCode,
+                    'tenKH' => $_POST['name'],
+                    'diaChi' => $_POST['address'],
+                    'sdt' => $_POST['phone'],
+                    'email' => $_POST['email']
+                ];
                 $this->partnerModel->addCustomer($insertData);
             }
-            
             header('Location: ' . BASE_URL . '/partner/' . $type);
         }
     }
@@ -157,5 +151,46 @@ class PartnerController extends Controller {
             die("Lỗi khôi phục!");
         }
     }
+
+    // Trong file: controllers/PartnerController.php
+
+public function quickAdd() {
+    // 1. Nhận dữ liệu
+    $tenKH = $_POST['tenKH'] ?? '';
+    $sdt   = $_POST['sdt'] ?? '';
+    $diaChi = $_POST['diaChi'] ?? '';
+    $email = $_POST['email'] ?? '';
+
+    // 2. Validate đơn giản
+    if (empty($tenKH) || empty($sdt)) {
+        echo json_encode(['success' => false, 'message' => 'Vui lòng nhập tên và SĐT']);
+        return;
+    }
+
+    // 3. Sinh mã khách hàng tự động (Ví dụ: KH + timestamp)
+    $maKH = 'KH' . time(); 
+
+    // 4. Gọi Model để lưu vào Database
+    // $this->partnerModel->addCustomer($maKH, $tenKH, $sdt, $diaChi);
+    // Giả lập code lưu DB (Bạn thay bằng code thật của bạn):
+    $db = Database::getInstance()->getConnection();
+    $stmt = $db->prepare("INSERT INTO khachhang (maKH, tenKH, sdt, diaChi, email, trangThai) VALUES (?, ?, ?, ?, ?, 1)");
+    try {
+        $stmt->execute([$maKH, $tenKH, $sdt, $diaChi, $email]);
+        // 5. TRẢ VỀ JSON THÀNH CÔNG (Quan trọng để JS tự động chọn)
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'maKH' => $maKH,
+                'tenKH' => $tenKH,
+                'sdt' => $sdt,
+                'diaChi' => $diaChi,
+                'email' => $email
+            ]
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()]);
+    }
+}
 }
 ?>

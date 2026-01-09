@@ -18,7 +18,7 @@
                             <th>Mã Phiếu</th>
                             <th>Ngày Nhập</th>
                             <th>Nhà Cung Cấp</th>
-                            <th>Người Nhập</th>
+                            <th>Nhân viên thực hiện</th>
                             <th>Ghi Chú</th>
                             <th>Thao tác</th>
                         </tr>
