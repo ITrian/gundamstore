@@ -12,18 +12,7 @@
             <form action="<?php echo BASE_URL; ?>/product/update" method="POST">
                 <input type="hidden" name="maHH" value="<?php echo htmlspecialchars($data['product']['maHH']); ?>">
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Mã Hàng Hóa</label>
-                            <input type="text" class="form-control" value="<?php echo htmlspecialchars($data['product']['maHH']); ?>" readonly>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Tên Hàng Hóa (*)</label>
-                            <input type="text" name="tenHH" class="form-control" value="<?php echo htmlspecialchars($data['product']['tenHH']); ?>" required>
-                        </div>
-
+                        
                         <div class="mb-3">
                             <label class="form-label">Thương hiệu</label>
                             <input type="text" name="thuongHieu" class="form-control" value="<?php echo htmlspecialchars($data['product']['thuongHieu'] ?? ''); ?>">

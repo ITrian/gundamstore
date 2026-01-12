@@ -7,8 +7,9 @@ class ProductModel {
     }
 
     public function getAll() {
-        // SỬA: Query phức tạp hơn để tính tổng tồn từ bảng lo_hang_vi_tri
-        $sql = "SELECT h.*, d.tenDanhMuc, n.tenNCC, dv.tenDVT,
+        // Lấy danh sách sản phẩm kèm tổng tồn từ bảng lo_hang_vi_tri.
+        // LƯU Ý: Bảng hanghoa hiện KHÔNG có cột maNCC nên KHÔNG được join nhacungcap theo h.maNCC.
+        $sql = "SELECT h.*, d.tenDanhMuc, dv.tenDVT,
                 (
                     SELECT COALESCE(SUM(lvt.soLuong), 0)
                     FROM lo_hang_vi_tri lvt
@@ -17,7 +18,6 @@ class ProductModel {
                 ) as tongTon
                 FROM hanghoa h
                 LEFT JOIN danhmuc d ON h.maDanhMuc = d.maDanhMuc
-                LEFT JOIN nhacungcap n ON h.maNCC = n.maNCC
                 LEFT JOIN donvitinh dv ON h.maDVT = dv.maDVT
                 ORDER BY h.tenHH ASC";
         
@@ -34,9 +34,9 @@ class ProductModel {
     }
 
     public function create($data) {
-        // Insert includes loaiHang
-    $sql = "INSERT INTO hanghoa (maHH, tenHH, loaiHang, heSoChiemCho, maDanhMuc, maNCC, maDVT, model, thuongHieu, moTa) 
-        VALUES (:maHH, :tenHH, :loaiHang, :heSo, :maDanhMuc, :maNCC, :maDVT, :model, :thuongHieu, :moTa)";
+        // Insert includes loaiHang, KHÔNG còn lưu maNCC
+    $sql = "INSERT INTO hanghoa (maHH, tenHH, loaiHang, heSoChiemCho, maDanhMuc, maDVT, model, thuongHieu, moTa) 
+        VALUES (:maHH, :tenHH, :loaiHang, :heSo, :maDanhMuc, :maDVT, :model, :thuongHieu, :moTa)";
         $stmt = $this->conn->prepare($sql);
         // Ensure array has loaiHang key
         $params = [
@@ -45,7 +45,6 @@ class ProductModel {
             ':loaiHang' => $data['loaiHang'] ?? 'LO',
             ':heSo' => isset($data['heSoChiemCho']) ? (int)$data['heSoChiemCho'] : 1,
             ':maDanhMuc' => $data['maDanhMuc'],
-            ':maNCC' => $data['maNCC'],
             ':maDVT' => $data['maDVT'],
             ':model' => $data['model'],
             ':thuongHieu' => $data['thuongHieu'],
@@ -56,15 +55,14 @@ class ProductModel {
 
     public function update($id, $data) {
     $sql = "UPDATE hanghoa SET tenHH = :tenHH, loaiHang = :loaiHang, heSoChiemCho = :heSo, maDanhMuc = :maDanhMuc,
-        maNCC = :maNCC, maDVT = :maDVT, model = :model, thuongHieu = :thuongHieu, moTa = :moTa
-                WHERE maHH = :maHH";
+        maDVT = :maDVT, model = :model, thuongHieu = :thuongHieu, moTa = :moTa
+            WHERE maHH = :maHH";
         $stmt = $this->conn->prepare($sql);
         $params = [
             ':tenHH' => $data['tenHH'],
             ':loaiHang' => $data['loaiHang'] ?? 'LO',
             ':heSo' => isset($data['heSoChiemCho']) ? (int)$data['heSoChiemCho'] : 1,
             ':maDanhMuc' => $data['maDanhMuc'],
-            ':maNCC' => $data['maNCC'],
             ':maDVT' => $data['maDVT'],
             ':model' => $data['model'],
             ':thuongHieu' => $data['thuongHieu'],

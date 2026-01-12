@@ -33,15 +33,10 @@ class ProductController extends Controller {
         $stmt = $db->query("SELECT * FROM DONVITINH");
         $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Lấy NCC
-        $stmt = $db->query("SELECT * FROM NHACUNGCAP");
-        $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $data = [
             'title' => 'Thêm hàng hóa mới',
             'categories' => $categories,
-            'units' => $units,
-            'suppliers' => $suppliers
+            'units' => $units
         ];
 
         $this->view('products/create', $data);
@@ -58,10 +53,6 @@ class ProductController extends Controller {
         $stmt = $db->query("SELECT * FROM DONVITINH");
         $units = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Lấy NCC
-        $stmt = $db->query("SELECT * FROM NHACUNGCAP");
-        $suppliers = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
         $product = $this->productModel->find($id);
         if (!$product) { die('Không tìm thấy sản phẩm'); }
 
@@ -69,8 +60,7 @@ class ProductController extends Controller {
             'title' => 'Cập nhật Hàng hóa',
             'product' => $product,
             'categories' => $categories,
-            'units' => $units,
-            'suppliers' => $suppliers
+            'units' => $units
         ];
 
         $this->view('products/edit', $data);
@@ -84,7 +74,6 @@ class ProductController extends Controller {
                 'loaiHang' => $_POST['loaiHang'] ?? 'LO',
                 'heSoChiemCho' => $_POST['heSoChiemCho'] ?? 1,
                 'maDanhMuc' => $_POST['maDanhMuc'],
-                'maNCC' => $_POST['maNCC'],
                 'maDVT' => $_POST['maDVT'],
                 'model' => $_POST['model'],
                 'thuongHieu' => $_POST['thuongHieu'],
@@ -119,7 +108,6 @@ class ProductController extends Controller {
                 'loaiHang' => $_POST['loaiHang'],
                 'heSoChiemCho' => $_POST['heSoChiemCho'] ?? 1,
                 'maDanhMuc' => $_POST['maDanhMuc'],
-                'maNCC' => $_POST['maNCC'],
                 'maDVT' => $_POST['maDVT'],
                 'model' => $_POST['model'],
                 'thuongHieu' => $_POST['thuongHieu'],

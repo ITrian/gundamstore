@@ -75,17 +75,7 @@
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label font-weight-bold">Nhà Cung Cấp Mặc Định</label>
-                            <select name="maNCC" class="form-control" required>
-                                <option value="">-- Chọn NCC --</option>
-                                <?php foreach ($data['suppliers'] as $sup): ?>
-                                    <option value="<?php echo $sup['maNCC']; ?>">
-                                        <?php echo $sup['tenNCC']; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                        
                     </div>
 
                     <div class="col-12">

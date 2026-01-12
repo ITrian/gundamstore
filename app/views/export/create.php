@@ -221,14 +221,15 @@
                 $sel.find('option').each(function() {
                     var optVal = $(this).attr('value') || '';
                     if (!optVal) { // option rỗng '-- Chọn hàng --'
-                        $(this).prop('hidden', false);
+                        $(this).prop('disabled', false).prop('hidden', false);
                         return;
                     }
 
                     if (optVal !== currentValue && selectedValues.indexOf(optVal) !== -1) {
-                        $(this).prop('hidden', true);
+                        // Ẩn hẳn option khỏi dropdown cho các dòng khác
+                        $(this).prop('disabled', false).prop('hidden', true);
                     } else {
-                        $(this).prop('hidden', false);
+                        $(this).prop('disabled', false).prop('hidden', false);
                     }
                 });
             });
