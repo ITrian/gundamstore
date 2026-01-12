@@ -22,16 +22,19 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
-                        <p><strong>Sản phẩm:</strong> <?php echo $info['tenHH']; ?></p>
+                        <p><strong>Sản phẩm:</strong> <?php echo $info['tenHH']; ?> (<?php echo $info['maHH']; ?>)</p>
                         <p><strong>Serial:</strong> <span class="text-danger fw-bold"><?php echo $info['serial']; ?></span></p>
                         <p><strong>NCC:</strong> <?php echo $info['tenNCC']; ?></p>
-                        <p><strong>Hạn BH:</strong> <?php echo $info['hanBaoHanh']; ?></p>
+                        <p><strong>Hạn BH:</strong> <?php echo date('d/m/Y', strtotime($info['hanBaoHanh'])); ?></p>
                     </div>
                     <div class="col-md-6">
                         <form action="<?php echo BASE_URL; ?>/warranty/create" method="POST">
+                            <input type="hidden" name="maHH" value="<?php echo $info['maHH']; ?>">
                             <input type="hidden" name="serial" value="<?php echo $info['serial']; ?>">
-                            <textarea name="moTaLoi" class="form-control mb-2" placeholder="Mô tả lỗi..."></textarea>
-                            <button class="btn btn-warning w-100">Tạo phiếu bảo hành</button>
+                            
+                            <label>Mô tả lỗi:</label>
+                            <textarea name="moTaLoi" class="form-control mb-2" rows="3" required></textarea>
+                            <button class="btn btn-warning w-100 fw-bold">Tạo phiếu bảo hành</button>
                         </form>
                     </div>
                 </div>
@@ -41,40 +44,41 @@
     <?php elseif ($data['type'] == 'LIST'): ?>
         <div class="card shadow">
             <div class="card-header bg-info text-white">
-                <h6 class="m-0">Sản phẩm này quản lý theo LÔ. Vui lòng chọn Lô hàng để bảo hành:</h6>
+                <h6 class="m-0">Chọn Lô hàng để bảo hành:</h6>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Mã Lô</th>
-                                <th>Tên Hàng</th>
-                                <th>Ngày Nhập</th>
-                                <th>Hạn Bảo Hành</th>
-                                <th>Nhà Cung Cấp</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($data['result'] as $row): ?>
-                            <tr>
-                                <td><?php echo $row['maLo']; ?></td>
-                                <td><?php echo $row['tenHH']; ?></td>
-                                <td><?php echo $row['ngayNhap']; ?></td>
-                                <td><?php echo $row['hanBaoHanh']; ?></td>
-                                <td><?php echo $row['tenNCC']; ?></td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" 
-                                            onclick="openWarrantyModal('<?php echo $row['maLo']; ?>', '<?php echo $row['tenHH']; ?>')">
-                                        Bảo hành
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã Lô</th>
+                            <th>Tên Hàng</th>
+                            <th>Ngày Nhập</th>
+                            <th>Hạn Bảo Hành</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['result'] as $row): ?>
+                        <tr>
+                            <td><?php echo $row['maLo']; ?></td>
+                            <td><?php echo $row['tenHH']; ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($row['ngayNhap'])); ?></td>
+                            <td>
+                                <?php 
+                                    $date = date('d/m/Y', strtotime($row['hanBaoHanh']));
+                                    echo (strtotime($row['hanBaoHanh']) < time()) ? "<span class='text-danger'>$date (Hết hạn)</span>" : "<span class='text-success'>$date</span>";
+                                ?>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" 
+                                        onclick="openWarrantyModal('<?php echo $row['maLo']; ?>', '<?php echo $row['tenHH']; ?>', '<?php echo $row['maHH']; ?>')">
+                                    Bảo hành
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -87,12 +91,11 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Đang tạo phiếu cho: <b id="modalProductName"></b></p>
-                            <input type="hidden" name="serial" id="modalSerialInput">
+                            <p>Sản phẩm: <b id="modalProductName"></b></p>
                             
-                            <div class="mb-3">
+                            <input type="hidden" name="serial" id="modalSerialInput"> <input type="hidden" name="maHH" id="modalMaHHInput">     <div class="mb-3">
                                 <label>Mô tả lỗi:</label>
-                                <textarea name="moTaLoi" class="form-control" required></textarea>
+                                <textarea name="moTaLoi" class="form-control" rows="3" required></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -104,10 +107,10 @@
         </div>
 
         <script>
-            function openWarrantyModal(maLo, tenHH) {
-                document.getElementById('modalProductName').innerText = tenHH + ' (Lô: ' + maLo + ')';
-                // Vì bảng phieubh yêu cầu cột Serial, ta dùng Mã Lô làm Serial tạm thời
-                document.getElementById('modalSerialInput').value = maLo; 
+            function openWarrantyModal(maLo, tenHH, maHH) {
+                document.getElementById('modalProductName').innerText = tenHH + ' (' + maLo + ')';
+                document.getElementById('modalSerialInput').value = maLo; // Gán mã lô vào serial
+                document.getElementById('modalMaHHInput').value = maHH;   // Gán mã hàng
                 new bootstrap.Modal(document.getElementById('warrantyModal')).show();
             }
         </script>

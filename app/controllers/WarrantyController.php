@@ -8,29 +8,27 @@ class WarrantyController extends Controller {
     }
 
     public function index() {
-        $result = null;     // Kết quả tìm kiếm
-        $type = '';         // Kiểu kết quả: 'SINGLE' (1 cái) hoặc 'LIST' (nhiều lô)
+        $result = null;
+        $type = '';
         $message = "";
 
         if (isset($_GET['keyword'])) {
             $keyword = trim($_GET['keyword']);
-
-            // 1. Thử tìm theo Serial trước
+            
+            // 1. Tìm Serial trước
             $serialInfo = $this->warrantyModel->findBySerial($keyword);
 
             if ($serialInfo) {
-                // Tìm thấy Serial -> Đây là hàng Serial
                 $result = $serialInfo;
                 $type = 'SINGLE';
             } else {
-                // 2. Không thấy Serial -> Tìm theo Tên/Mã hàng (Hàng Lô)
+                // 2. Tìm theo sản phẩm (Lô)
                 $batchList = $this->warrantyModel->findByProduct($keyword);
-                
                 if (!empty($batchList)) {
                     $result = $batchList;
                     $type = 'LIST';
                 } else {
-                    $message = "Không tìm thấy Serial hoặc Sản phẩm nào khớp!";
+                    $message = "Không tìm thấy dữ liệu khớp!";
                 }
             }
         }
@@ -44,41 +42,34 @@ class WarrantyController extends Controller {
         ]);
     }
 
-    // Xử lý tạo phiếu (Giữ nguyên, nhưng lưu ý serial có thể là mã giả định)
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $maBH = 'BH' . time(); 
-            // ... (Code lấy dữ liệu giữ nguyên) ...
-            $serial = $_POST['serial'];
+            $maBH = 'BH' . time();
             
+            // Lấy dữ liệu từ form (bao gồm cả maHH vừa thêm)
             $data = [
                 'maBH' => $maBH,
-                'serial' => $serial,
+                'maHH' => $_POST['maHH'],   // <-- MỚI: Bắt buộc phải có
+                'serial' => $_POST['serial'],
                 'moTaLoi' => $_POST['moTaLoi'],
                 'maND' => $_SESSION['user_id']
             ];
 
             if ($this->warrantyModel->createTicket($data)) {
-                // THAY ĐỔI DÒNG NÀY: Chuyển sang trang chi tiết
+                // Chuyển sang trang chi tiết phiếu
                 header('Location: ' . BASE_URL . '/warranty/detail/' . $maBH);
                 exit;
+            } else {
+                die("Lỗi: Không thể tạo phiếu bảo hành. Kiểm tra lại dữ liệu đầu vào.");
             }
         }
     }
 
-    // 2. THÊM HÀM DETAIL: Hiển thị phiếu
+    // Hàm detail giữ nguyên logic hiển thị
     public function detail($maBH) {
-        // Lấy thông tin phiếu từ Model
         $ticket = $this->warrantyModel->getTicketDetail($maBH);
-
-        if (!$ticket) {
-            die("Không tìm thấy phiếu bảo hành này!");
-        }
-
-        $this->view('warranty/detail', [
-            'title' => 'Chi tiết phiếu bảo hành',
-            'ticket' => $ticket
-        ]);
+        if (!$ticket) die("Không tìm thấy phiếu!");
+        $this->view('warranty/detail', ['title' => 'Chi tiết phiếu', 'ticket' => $ticket]);
     }
 }
 ?>
