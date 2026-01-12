@@ -45,8 +45,8 @@ class PhieudathangController extends Controller {
             die('Dữ liệu không hợp lệ.');
         }
 
-        // sinh mã đơn đơn giản
-        $maDH = 'PD' . time();
+        // sinh mã đơn theo cấu trúc PD-ddMMyyyy-XXX
+        $maDH = $this->orderModel->generateId();
         $ngayDatHang = date('Y-m-d H:i:s');
         $maND = $_SESSION['user_id'] ?? null;
 

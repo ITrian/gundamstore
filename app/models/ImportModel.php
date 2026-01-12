@@ -6,18 +6,19 @@ class ImportModel {
         $this->conn = Database::getInstance()->getConnection();
     }
 
-    // --- ĐÃ SỬA: Sinh mã phiếu nhập theo định dạng PN-YYMMDD-XXX ---
+    // --- ĐÃ SỬA: Sinh mã phiếu nhập theo định dạng PN-ddMMyyyy-XXX ---
     private function generateMaPN() {
-        // Lấy ngày format YYMMDD (Ví dụ: 260109 cho ngày 09/01/2026)
-        $date = date('ymd'); 
+        // Lấy ngày format dmY (Ví dụ: 12012026)
+        $date = date('dmY'); 
         
-        // Cấu trúc: PN-260109-001
-        // Đếm ký tự: P(1) N(2) -(3) 2(4) 6(5) 0(6) 1(7) 0(8) 9(9) -(10) [Số bắt đầu từ 11]
-        $sql = "SELECT MAX(CAST(SUBSTRING(maPN, 11, 3) AS UNSIGNED)) as max_stt 
+        // Cấu trúc: PN-12012026-001
+        // Đếm ký tự prefix: PN- (3) + 12012026 (8) + - (1) = 12 ký tự
+        // Số thứ tự bắt đầu từ ký tự thứ 13
+        $sql = "SELECT MAX(CAST(SUBSTRING(maPN, 13, 3) AS UNSIGNED)) as max_stt 
                 FROM phieunhap 
                 WHERE maPN LIKE ?";
         
-        // Mẫu tìm kiếm: PN-260109-%
+        // Mẫu tìm kiếm: PN-12012026-%
         $like = 'PN-' . $date . '-%';
         
         $stmt = $this->conn->prepare($sql);
@@ -27,7 +28,7 @@ class ImportModel {
         // Nếu chưa có thì bắt đầu là 1, có rồi thì cộng thêm 1
         $stt = isset($row['max_stt']) && $row['max_stt'] ? ((int)$row['max_stt'] + 1) : 1;
         
-        // Trả về: PN-260109-001
+        // Trả về: PN-12012026-001
         return 'PN-' . $date . '-' . str_pad($stt, 3, '0', STR_PAD_LEFT);
     }
 

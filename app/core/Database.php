@@ -1,5 +1,7 @@
 <?php
-require_once '../app/config/config.php';
+if (!defined('DB_HOST')) {
+    require_once dirname(dirname(__FILE__)) . '/config/config.php';
+}
 
 class Database {
     private static $instance = null;

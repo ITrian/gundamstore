@@ -25,5 +25,17 @@ class UserModel {
             return false;
         }
     }
+
+    // Lấy danh sách quyền của một user
+    public function getPermissions($maND) {
+        $sql = "SELECT q.maQuyen 
+                FROM nguoidung nd
+                JOIN quyen_vaitro qvt ON nd.maVaiTro = qvt.maVaiTro
+                JOIN quyen q ON qvt.maQuyen = q.maQuyen
+                WHERE nd.maND = :maND";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':maND' => $maND]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng 1 chiều các mã quyền
+    }
 }
 ?>

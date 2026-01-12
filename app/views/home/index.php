@@ -40,7 +40,7 @@
         <div class="col-md-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-warning text-dark fw-bold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-exclamation-triangle-fill"></i> Danh sách mặt hàng sắp hết (<= 10)</span>
+                    <span><i class="bi bi-exclamation-triangle-fill"></i> Danh sách mặt hàng hết hàng hoặc sắp hết</span>
                     <a href="<?php echo BASE_URL; ?>/inventory" class="btn btn-sm btn-light">Xem tất cả</a>
                 </div>
                 <div class="card-body p-0">

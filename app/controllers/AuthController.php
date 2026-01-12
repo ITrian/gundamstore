@@ -34,6 +34,10 @@ class AuthController extends Controller {
                     $_SESSION['user_name'] = $user['tenND'];
                     $_SESSION['user_role'] = $user['maVaiTro'];
                     $_SESSION['role_name'] = $user['tenVaiTro'];
+                    
+                    // Lưu danh sách quyền vào session
+                    $permissions = $userModel->getPermissions($user['maND']);
+                    $_SESSION['user_permissions'] = $permissions;
 
                     // Chuyển hướng vào trang Dashboard
                     header('Location: ' . BASE_URL . '/home/index');
@@ -60,6 +64,7 @@ public function logout() {
         unset($_SESSION['user_name']);
         unset($_SESSION['user_role']);
         unset($_SESSION['role_name']);
+        unset($_SESSION['user_permissions']);
 
         // 3. Hủy hoàn toàn phiên làm việc
         session_destroy();

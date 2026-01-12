@@ -14,12 +14,17 @@
                 </a>
             </li>
 
+            <!-- Đối tác: chỉ ai có quyền hệ thống hoặc nhập xuất -->
+            <?php if (checkPermission('Q_HETHONG') || checkPermission('Q_NHAP_KHO') || checkPermission('Q_XUAT_KHO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/partner/supplier">
-                    <i class="fas fa-box me-2"></i> Đối tác
+                    <i class="fas fa-users me-2"></i> Đối tác
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Sản phẩm & Danh mục: check quyền Q_XEM_HANG hoặc Q_QL_HANG -->
+            <?php if (checkPermission('Q_XEM_HANG') || checkPermission('Q_QL_HANG')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/product">
                     <i class="fas fa-box me-2"></i> Sản phẩm
@@ -31,7 +36,10 @@
                     <i class="fas fa-tags me-2"></i> Danh mục
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Đặt hàng & Nhập kho: check quyền Nhập kho -->
+            <?php if (checkPermission('Q_NHAP_KHO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/phieudathang">
                     <i class="fas fa-shopping-cart me-2"></i> Đặt hàng
@@ -43,13 +51,19 @@
                     <i class="fas fa-download me-2"></i> Nhập kho
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Xuất kho: check quyền Xuất kho -->
+            <?php if (checkPermission('Q_XUAT_KHO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/export">
                     <i class="fas fa-upload me-2"></i> Xuất kho
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Tồn kho & Vị trí: check quyền Xem hàng hoặc Quản lý hàng -->
+            <?php if (checkPermission('Q_XEM_HANG') || checkPermission('Q_QL_HANG')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/inventory">
                     <i class="fas fa-warehouse me-2"></i> Tồn kho
@@ -61,17 +75,25 @@
                     <i class="fas fa-map-marker-alt me-2"></i> Vị trí
                 </a>
             </li>
+            <?php endif; ?>
+
+            <!-- Bảo hành: check quyền Xuất hoặc Nhập (thường liên quan hậu mãi) hoặc Q_XEM_HANG -->
+            <?php if (checkPermission('Q_XEM_HANG') || checkPermission('Q_NHAP_KHO') || checkPermission('Q_XUAT_KHO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/warranty">
                     <i class="fas fa-shield-alt me-2"></i> Bảo hành
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Báo cáo: check quyền Q_BAOCAO -->
+            <?php if (checkPermission('Q_BAOCAO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/report">
                     <i class="fas fa-chart-bar me-2"></i> Báo cáo
                 </a>
             </li>
+            <?php endif; ?>
 
             <hr class="text-white">
 
