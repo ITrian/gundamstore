@@ -368,7 +368,7 @@
                 // Kiểm tra số lượng tồn >= số lượng xuất
                 if (qty > 0 && qty > ton) {
                     ok = false;
-                    firstMessage = 'Số lượng xuất cho sản phẩm ' + (selectedOpt.text() || '') + ' vượt quá số lượng tồn (' + ton + ').';
+                    firstMessage = 'Số lượng xuất cho sản phẩm ' + (selectedOpt.text() || '') + ' vượt quá số lượng tồn kho .';
                     row.find('.qty-input').focus();
                     return false; // break each
                 }
