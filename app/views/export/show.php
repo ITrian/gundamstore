@@ -53,12 +53,23 @@
                             $totalAmount += intval($ln['soLuong']) * floatval($ln['donGia']);
                         }
                     ?>
-                    <div class="small text-muted">Tổng</div>
-                        <div class="fw-bold"><?php echo $totalItems; ?> cái — <?php echo number_format($totalAmount, 0, ',', '.'); ?> đ</div>
+                    <div class="small text-muted">Tổng giá trị xuất</div>
+                        <div class="fw-bold"><?php echo number_format($totalAmount, 0, ',', '.'); ?> đ</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <?php if (!empty($exp['diaChi'])): ?>
+        <div class="mb-3">
+             <div class="card">
+                <div class="card-body py-2">
+                    <span class="text-muted me-2">Địa chỉ:</span> 
+                    <strong><?php echo htmlspecialchars($exp['diaChi']); ?></strong>
+                </div>
+             </div>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($exp['ghiChu'])): ?>
         <div class="mb-3"><strong>Ghi chú:</strong> <?php echo nl2br(htmlspecialchars($exp['ghiChu'])); ?></div>
@@ -75,8 +86,8 @@
                             <th style="width:80px">SL</th>
                             <th style="width:120px">Đơn giá xuất</th>
                             <th style="width:120px">Thành tiền</th>
-                            <th>Lô</th>
-                            <th>Vị trí</th>
+                            <th style="width:100px">Lô</th>
+                            <th style="width:100px">Vị trí</th>
                             <th>Serial</th>
                         </tr>
                     </thead>

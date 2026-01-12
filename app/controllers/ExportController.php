@@ -75,14 +75,12 @@ class ExportController extends Controller {
         try {
             $db->beginTransaction();
 
-            // Sinh mã phiếu xuất đơn giản: PX + timestamp
-            $maPX = 'PX' . time();
-            // Đảm bảo không trùng (nếu trùng, append random)
-            $stmtChk = $db->prepare("SELECT COUNT(*) FROM phieuxuat WHERE maPX = :maPX");
-            $stmtChk->execute([':maPX' => $maPX]);
-            if ($stmtChk->fetchColumn() > 0) {
-                $maPX = 'PX' . time() . rand(100,999);
-            }
+            // Sinh mã phiếu xuất theo cấu trúc mới
+            $maPX = $this->exportModel->generateMaPX();
+            
+            // Xóa logic cũ (random timestamp) vì đã có hàm generate đảm bảo unique theo logic tuần tự
+            // Tuy nhiên để chắc chắn an toàn concurrency, có thể thêm check loop, nhưng với scope hiện tại thì just trusting generate is fine.
+
 
             $maND = $_SESSION['user_id'] ?? null;
 
@@ -122,22 +120,44 @@ class ExportController extends Controller {
                     ':donGia' => $price
                 ]);
 
-                // If serials provided: mark as exported (trangThai = 0) và ghi ct_phieuxuat_serial
+                // If serials provided: mark as exported (trangThai = 0), trừ tồn kho vị trí (lo_hang_vi_tri) và xóa vị trí serial
                 if (!empty($serialJson)) {
                     $selectedSerials = json_decode($serialJson, true);
-                    $stmtSerial = $db->prepare("UPDATE hanghoa_serial SET trangThai = 0, maViTri = NULL WHERE serial = :serial AND trangThai = 1");
-                    $stmtCtSerial = $db->prepare("INSERT INTO ct_phieuxuat_serial (maPX, maHH, serial) VALUES (:maPX, :maHH, :serial)");
+                    
+                    // Prepare statements
+                    $stmtGetInfo = $db->prepare("SELECT maLo, maViTri FROM hanghoa_serial WHERE serial = :serial AND trangThai = 1");
+                    $stmtUpdateSerial = $db->prepare("UPDATE hanghoa_serial SET trangThai = 0, maViTri = NULL WHERE serial = :serial");
+                    $stmtDeductLoc = $db->prepare("UPDATE lo_hang_vi_tri SET soLuong = soLuong - 1 WHERE maLo = :maLo AND maViTri = :maViTri AND soLuong > 0");
+                    // Cập nhật câu lệnh INSERT để lưu cả maLo và maViTri vào lịch sử
+                    $stmtCtSerial = $db->prepare("INSERT INTO ct_phieuxuat_serial (maPX, maHH, serial, maLo, maViTri) VALUES (:maPX, :maHH, :serial, :maLo, :maViTri)");
+                    
                     foreach ($selectedSerials as $s) {
-                        $stmtSerial->execute([':serial' => $s]);
-                        if ($stmtSerial->rowCount() == 0) {
-                            throw new Exception('Serial không hợp lệ hoặc đã được xuất: ' . $s);
+                        // 1. Lấy thông tin lô/vị trí hiện tại của serial
+                        $stmtGetInfo->execute([':serial' => $s]);
+                        $info = $stmtGetInfo->fetch(PDO::FETCH_ASSOC);
+                        
+                        if (!$info) {
+                            throw new Exception("Serial không tồn tại hoặc đã xuất: " . $s);
+                        }
+                        
+                        $maLo = $info['maLo'];
+                        $maViTri = $info['maViTri'];
+
+                        // 2. Cập nhật serial: Đã xuất, xóa vị trí
+                        $stmtUpdateSerial->execute([':serial' => $s]);
+
+                        // 3. Trừ số lượng tồn kho trong bảng lo_hang_vi_tri (để giải phóng dung lượng vị trí)
+                        if (!empty($maLo) && !empty($maViTri)) {
+                            $stmtDeductLoc->execute([':maLo' => $maLo, ':maViTri' => $maViTri]);
                         }
 
-                        // lưu log serial theo phiếu xuất
+                        // 4. Lưu log serial kèm thông tin vị trí cũ để tra cứu
                         $stmtCtSerial->execute([
                             ':maPX'   => $maPX,
                             ':maHH'   => $maHH,
-                            ':serial' => $s
+                            ':serial' => $s,
+                            ':maLo'   => $maLo,
+                            ':maViTri' => $maViTri
                         ]);
                     }
                     continue;

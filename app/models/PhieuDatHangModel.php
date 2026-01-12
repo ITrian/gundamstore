@@ -114,5 +114,26 @@ class PhieuDatHangModel {
             return false;
         }
     }
+
+    public function generateId() {
+        // Format: PD-ddMMyyyy-XXX
+        $prefix = 'PD-' . date('dmY') . '-';
+        
+        // Tìm mã lớn nhất trong ngày
+        $sql = "SELECT maDH FROM phieudathang WHERE maDH LIKE :prefix ORDER BY length(maDH) DESC, maDH DESC LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':prefix' => $prefix . '%']);
+        $lastId = $stmt->fetchColumn();
+
+        if ($lastId) {
+            // Lấy 3 ký tự cuối để tăng
+            $lastSeq = (int)substr($lastId, -3);
+            $newSeq = $lastSeq + 1;
+        } else {
+            $newSeq = 1;
+        }
+
+        return $prefix . str_pad($newSeq, 3, '0', STR_PAD_LEFT);
+    }
 }
 ?>

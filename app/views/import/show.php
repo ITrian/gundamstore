@@ -72,7 +72,8 @@
                             <th style="width:100px">SL</th>
                             <th style="width:140px">Đơn giá</th>
                             <th style="width:140px">Thành tiền</th>
-                            <th>LOT / Vị trí</th>
+                            <th style="width:100px">Lô</th>
+                            <th style="width:100px">Vị trí</th>
                             <th>Serials</th>
                         </tr>
                     </thead>
@@ -92,40 +93,55 @@
                                     <td>
                                         <?php if (!empty($ln['lots'])): ?>
                                             <?php foreach ($ln['lots'] as $lot): ?>
-                                                <div class="mb-2">
-                                                    <div class="fw-semibold"><?php echo htmlspecialchars($lot['maLo']); ?> <small class="text-muted">(Nhập: <?php echo intval($lot['soLuongNhap']); ?>)</small></div>
-                                                    <?php if (!empty($lot['locations'])): ?>
-                                                        <div class="small">
-                                                            <?php foreach ($lot['locations'] as $loc): ?>
-                                                                <div><?php echo htmlspecialchars($loc['maViTri']); ?> — <?php echo htmlspecialchars($loc['day'] . '-' . $loc['ke'] . '-' . $loc['o']); ?> <span class="badge bg-secondary ms-1"><?php echo intval($loc['soLuong']); ?></span></div>
-                                                            <?php endforeach; ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
+                                                <div><?php echo htmlspecialchars($lot['maLo']); ?></div>
                                             <?php endforeach; ?>
                                         <?php else: ?>
                                             -
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php if (!empty($ln['lots'])): ?>
-                                            <?php foreach ($ln['lots'] as $lot): ?>
-                                                <?php if (!empty($lot['serials'])): ?>
-                                                    <div class="mb-2 small text-monospace">
-                                                        <?php foreach ($lot['serials'] as $s): ?>
-                                                            <div><?php echo htmlspecialchars($s['serial']); ?><?php if (!empty($s['maViTri'])) echo ' <span class="text-muted">@' . htmlspecialchars($s['maViTri']) . '</span>'; ?></div>
-                                                        <?php endforeach; ?>
-                                                    </div>
-                                                <?php endif; ?>
-                                            <?php endforeach; ?>
-                                        <?php else: ?>
-                                            -
-                                        <?php endif; ?>
+                                        <?php 
+                                        $hasLocs = false;
+                                        if (!empty($ln['lots'])) {
+                                            $shownLocs = [];
+                                            foreach ($ln['lots'] as $lot) {
+                                                if (!empty($lot['locations'])) {
+                                                    foreach ($lot['locations'] as $loc) {
+                                                        // Avoid duplicates if multiple lots share same location (unlikely here but good validation)
+                                                        $locKey = $loc['maViTri']; 
+                                                        // Or just list them all? Export lists them.
+                                                        echo '<div>' . htmlspecialchars($loc['maViTri']) . '</div>';
+                                                        $hasLocs = true;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (!$hasLocs) echo '-';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $hasSerials = false;
+                                        if (!empty($ln['lots'])) {
+                                            foreach ($ln['lots'] as $lot) {
+                                                if (!empty($lot['serials'])) {
+                                                    // Collect serials
+                                                    echo '<div class="small text-monospace">';
+                                                    foreach ($lot['serials'] as $s) {
+                                                        echo '<span class="d-inline-block border rounded px-1 me-1 mb-1 bg-white">' . htmlspecialchars($s['serial']) . '</span>';
+                                                    }
+                                                    echo '</div>';
+                                                    $hasSerials = true;
+                                                }
+                                            }
+                                        }
+                                        if (!$hasSerials) echo '-';
+                                        ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="7" class="text-center text-muted py-4">Không có chi tiết.</td></tr>
+                            <tr><td colspan="8" class="text-center text-muted py-4">Không có chi tiết.</td></tr>
                         <?php endif; ?>
                     </tbody>
                     <?php if (!empty($lines)): ?>
@@ -136,7 +152,7 @@
                                 <td><strong><?php echo $totalItems; ?></strong></td>
                                 <td></td>
                                 <td><strong><?php echo number_format($totalAmount, 0, ',', '.'); ?> đ</strong></td>
-                                <td colspan="2"></td>
+                                <td colspan="3"></td>
                             </tr>
                         </tfoot>
                     <?php endif; ?>

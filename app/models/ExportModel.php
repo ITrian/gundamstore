@@ -92,21 +92,83 @@ class ExportModel {
         }
 
         // 3. Lấy serial từ ct_phieuxuat_serial
-        $sqlSer = "SELECT s.maHH, s.serial
+        // Bây giờ đã lưu maLo và maViTri trực tiếp vào bảng này, không cần join lằng nhằng nữa
+        $sqlSer = "SELECT s.maHH, s.serial, s.maLo, s.maViTri
                    FROM ct_phieuxuat_serial s
                    WHERE s.maPX = :maPX";
         $stmtSer = $this->conn->prepare($sqlSer);
         $stmtSer->execute([':maPX' => $maPX]);
         $rowsSer = $stmtSer->fetchAll(PDO::FETCH_ASSOC);
 
+        // Gom nhóm lô và vị trí cho hàng serial để hiển thị gọn
+        $serialLotsMap = []; // [idx => [maLo => count]]
+        $serialLocsMap = []; // [idx => [maViTri => count]]
+
         foreach ($rowsSer as $row) {
             $maHH = $row['maHH'];
             if (!isset($byProduct[$maHH])) continue;
             $idx = $byProduct[$maHH];
+
             $lines[$idx]['serials'][] = $row['serial'];
+
+            if (!empty($row['maLo'])) {
+                if (!isset($serialLotsMap[$idx][$row['maLo']])) {
+                    $serialLotsMap[$idx][$row['maLo']] = 0;
+                }
+                $serialLotsMap[$idx][$row['maLo']]++;
+            }
+
+            if (!empty($row['maViTri'])) {
+                if (!isset($serialLocsMap[$idx][$row['maViTri']])) {
+                    $serialLocsMap[$idx][$row['maViTri']] = 0;
+                }
+                $serialLocsMap[$idx][$row['maViTri']]++;
+            }
+        }
+
+        // Đẩy thông tin lô của hàng serial vào mảng lots
+        foreach ($serialLotsMap as $idx => $lots) {
+            foreach ($lots as $maLo => $count) {
+                // Để tránh trùng lặp nếu lỡ logic nào đó đã thêm rồi (dù thường là không)
+                // Ta chỉ append mới
+                $lines[$idx]['lots'][] = [
+                    'maLo' => $maLo,
+                    'soLuong' => $count
+                ];
+            }
+        }
+
+        // Đẩy thông tin vị trí của hàng serial vào mảng locations
+        foreach ($serialLocsMap as $idx => $locs) {
+            foreach ($locs as $maViTri => $count) {
+                $lines[$idx]['locations'][] = [
+                    'maViTri' => $maViTri,
+                    'soLuong' => $count
+                ];
+            }
         }
 
         return $lines;
+    }
+
+    // Sinh mã phiếu xuất theo format PX-ddMMyyyy-XXX
+    public function generateMaPX() {
+        $date = date('dmY');
+        $prefix = 'PX-' . $date . '-';
+        
+        // Tìm số thứ tự lớn nhất trong ngày
+        // PX-12012026-001 -> prefix length = 12. start substring at 13.
+        $sql = "SELECT MAX(CAST(SUBSTRING(maPX, 13, 3) AS UNSIGNED)) as max_stt 
+                FROM phieuxuat 
+                WHERE maPX LIKE :prefix";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':prefix' => $prefix . '%']);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        $stt = isset($row['max_stt']) && $row['max_stt'] ? ((int)$row['max_stt'] + 1) : 1;
+        
+        return $prefix . str_pad($stt, 3, '0', STR_PAD_LEFT);
     }
 }
 ?>
