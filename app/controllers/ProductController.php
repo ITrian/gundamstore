@@ -74,6 +74,7 @@ class ProductController extends Controller {
                 'loaiHang' => $_POST['loaiHang'] ?? 'LO',
                 'heSoChiemCho' => $_POST['heSoChiemCho'] ?? 1,
                 'maDanhMuc' => $_POST['maDanhMuc'],
+                // supplier removed: maNCC
                 'maDVT' => $_POST['maDVT'],
                 'model' => $_POST['model'],
                 'thuongHieu' => $_POST['thuongHieu'],
@@ -96,6 +97,44 @@ class ProductController extends Controller {
             // If delete failed due to dependencies, redirect with error
             header('Location: ' . BASE_URL . '/product?error=has_lots');
         }
+    }
+
+    // API: trả về danh sách lô cho 1 sản phẩm (dùng AJAX)
+    public function lots() {
+        // lấy maHH từ query string hoặc param
+    $maHH = isset($_GET['maHH']) ? $_GET['maHH'] : null;
+        header('Content-Type: application/json');
+        if (!$maHH) {
+            echo json_encode(['success' => false, 'message' => 'Thiếu mã hàng']);
+            return;
+        }
+
+        $lots = $this->productModel->getLots($maHH);
+        echo json_encode(['success' => true, 'lots' => $lots]);
+    }
+
+    // API: trả về vị trí cho 1 lô (maLo)
+    public function locations() {
+        $maLo = isset($_GET['maLo']) ? $_GET['maLo'] : null;
+        header('Content-Type: application/json');
+        if (!$maLo) {
+            echo json_encode(['success' => false, 'message' => 'Thiếu mã lô']);
+            return;
+        }
+        $locs = $this->productModel->getLocationsByLo($maLo);
+        echo json_encode(['success' => true, 'locations' => $locs]);
+    }
+
+    // API: trả về serials khả dụng cho một sản phẩm
+    public function serials() {
+        $maHH = isset($_GET['maHH']) ? $_GET['maHH'] : null;
+        header('Content-Type: application/json');
+        if (!$maHH) {
+            echo json_encode(['success' => false, 'message' => 'Thiếu mã hàng']);
+            return;
+        }
+        $serials = $this->productModel->getAvailableSerials($maHH);
+        echo json_encode(['success' => true, 'serials' => $serials]);
     }
 
     // Xử lý lưu sản phẩm vào CSDL

@@ -1,19 +1,13 @@
 <?php require_once APP_ROOT . '/views/layouts/header.php'; ?>
 <?php require_once APP_ROOT . '/views/layouts/sidebar.php'; ?>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
-<style>
-    .select2-results__option[aria-disabled="true"] {
-        display: none !important;
-    }
-</style>
-
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800">Tạo Phiếu Nhập Kho Mới</h1>
 
+    <div id="importErrorBox" class="alert alert-danger d-none" role="alert"></div>
+
     <form action="<?php echo BASE_URL; ?>/import/store" method="POST" id="importForm">
+        <input type="hidden" name="maDH" id="selectedOrderId" value="">
         
         <div class="card shadow mb-4">
             <div class="card-header py-3">
@@ -24,7 +18,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="font-weight-bold">Nhà cung cấp (*)</label>
-                            <select name="maNCC" id="importSupplier" class="form-select" required>
+                            <select name="maNCC" class="form-select" required>
                                 <option value="">-- Chọn NCC --</option>
                                 <?php foreach ($data['suppliers'] as $ncc): ?>
                                     <option value="<?php echo $ncc['maNCC']; ?>">
@@ -32,6 +26,15 @@
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="font-weight-bold">Đơn đặt hàng (tuỳ chọn)</label>
+                            <select id="orderSelect" class="form-select">
+                                <option value="">-- Chọn đơn đặt hàng --</option>
+                            </select>
+                            <div class="form-text">Chọn NCC trước, sau đó chọn đơn đặt hàng để load chi tiết.</div>
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -56,11 +59,12 @@
                     <table class="table table-bordered" id="productTable" width="100%" cellspacing="0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 30%">Sản phẩm</th>
-                                <th style="width: 12%">Hạn Bảo Hành (Lô)</th>
-                                <th style="width: 14%">Số lượng</th>
-                                <th style="width: 15%">Đơn giá nhập</th>
-                                <th style="width: 12%">Thành tiền</th>
+                                <th style="width: 25%">Sản phẩm</th>
+                                <th style="width: 10%">Hạn Bảo Hành (Lô)</th>
+                                <th style="width: 8%">Số lượng đặt</th>
+                                <th style="width: 17%">Số lượng</th>
+                                <th style="width: 13%">Đơn giá nhập</th>
+                                <th style="width: 20%">Thành tiền</th>
                                 <th style="width: 7%">Xóa</th>
                             </tr>
                         </thead>
@@ -68,7 +72,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <select name="product_id[]" class="form-select form-select-sm import-product-select" required style="min-width:220px;">
+                                        <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
                                             <option value="">-- Chọn hàng --</option>
                                             <?php foreach ($data['products'] as $p): ?>
                                                 <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
@@ -79,14 +83,16 @@
                                         <span class="badge bg-secondary type-badge">LO</span>
                                     </div>
                                 </td>
-                               <td>
-                                    <input type="date" name="expiry[]" class="form-control form-control-sm" 
-                                        min="<?php echo date('Y-m-d'); ?>">
+                                <td>
+                                    <input type="date" name="expiry[]" class="form-control form-control-sm" min="<?php echo date('Y-m-d'); ?>">
                                 </td>
                                 <td>
-                                    <div class="input-group">
-                                        <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm ms-2 open-serial-modal" title="Nhập serial" style="white-space:nowrap;">Nhập serial</button>
+                                    <input type="number" class="form-control form-control-sm ordered-qty" value="0" readonly>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center" style="gap:4px;">
+                                        <input type="number" name="quantity[]" class="form-control form-control-sm qty-input" min="1" value="1" required style="max-width:80px;">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm open-serial-modal" title="Nhập serial" style="white-space:nowrap;">Nhập serial</button>
                                     </div>
                                     <input type="hidden" name="serials[]" class="serials-hidden">
                                 </td>
@@ -119,266 +125,471 @@
     </form>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
-    function initImportSelect2(context) {
-        var $ctx = context ? $(context) : $(document);
+    // 1. Thêm dòng mới
+    document.getElementById('addRow').addEventListener('click', function() {
+        var table = document.getElementById('productTable').getElementsByTagName('tbody')[0];
+        var newRow = table.rows[0].cloneNode(true);
+        
+        // Reset giá trị các input trong dòng mới
+        var inputs = newRow.getElementsByTagName('input');
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].value = (inputs[i].type === 'number') ? 0 : '';
+            if(inputs[i].name == 'quantity[]') inputs[i].value = 1;
+        }
+        // Reset hidden serials value
+        var sh = newRow.querySelector('.serials-hidden');
+        if (sh) sh.value = '';
+        
+        // Reset Select box
+        newRow.getElementsByTagName('select')[0].value = '';
+        
+        table.appendChild(newRow);
+        updateEvents(); // Gán lại sự kiện tính tiền cho dòng mới
+        // Trigger change on the new select so visibility/badge updates
+        var newSelect = newRow.querySelector('select[name="product_id[]"]');
+        if (newSelect) newSelect.dispatchEvent(new Event('change'));
+    });
 
-        $('#importSupplier').select2({
-            theme: 'bootstrap-5',
-            placeholder: '-- Chọn NCC --',
-            allowClear: true,
-            width: '100%',
-            minimumResultsForSearch: 0,
-            dropdownParent: $('body')
+    // 2. Xóa dòng
+    document.getElementById('productTable').addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('removeRow')) {
+            var rowCount = document.getElementById('productTable').tBodies[0].rows.length;
+            if (rowCount > 1) {
+                e.target.closest('tr').remove();
+                calculateTotal(); // Tính lại tổng tiền
+            } else {
+                alert('Phải có ít nhất 1 dòng sản phẩm!');
+            }
+        }
+    });
+
+    // 3. Tính thành tiền tự động
+    function updateEvents() {
+    var qtyInputs = document.querySelectorAll('.qty-input');
+    var priceInputs = document.querySelectorAll('.price-input');
+        // Lấy thêm các ô ngày hết hạn
+        var dateInputs = document.querySelectorAll('input[type="date"]');
+
+        // Use assignment to avoid duplicate handlers when re-initializing
+        qtyInputs.forEach(input => { input.oninput = calculateRow; });
+        priceInputs.forEach(input => { input.oninput = calculateRow; });
+        // hidden serials do not drive UI directly; modal will update them
+        var serialHidden = document.querySelectorAll('.serials-hidden');
+        serialHidden.forEach(function(sh){ sh.onchange = calculateRow; });
+        
+        // product change: toggle serials vs quantity
+        var selects = document.querySelectorAll('select[name="product_id[]"]');
+        selects.forEach(sel => {
+            sel.onchange = function() {
+                var loai = this.options[this.selectedIndex] ? this.options[this.selectedIndex].getAttribute('data-loai') : null;
+                var tr = this.closest('tr');
+                var qty = tr.querySelector('input[name="quantity[]"]');
+                var serialBtn = tr.querySelector('.open-serial-modal');
+                var badge = tr.querySelector('.type-badge');
+                if (loai === 'SERIAL') {
+                    // for serial-managed products we still show qty and allow serial input via modal
+                    if (serialBtn) serialBtn.style.display = '';
+                    if (badge) { badge.innerText = 'SERIAL'; badge.className = 'badge bg-success type-badge'; }
+                } else {
+                    if (serialBtn) serialBtn.style.display = 'none';
+                    if (badge) { badge.innerText = 'LO'; badge.className = 'badge bg-secondary type-badge'; }
+                }
+                // Sau khi chọn sản phẩm, cập nhật danh sách option để không cho chọn trùng
+                refreshImportProductOptions();
+
+                // recalc row after changing type
+                var ev = new Event('input', { bubbles: true });
+                if (qty) qty.dispatchEvent(ev);
+            };
         });
 
-        $ctx.find('.import-product-select').select2({
-            theme: 'bootstrap-5',
-            placeholder: '-- Chọn hàng --',
-            allowClear: true,
-            width: '100%',
-            minimumResultsForSearch: 0,
-            dropdownParent: $('body')
+        // serial modal open buttons
+        var serialOpenBtns = document.querySelectorAll('.open-serial-modal');
+        serialOpenBtns.forEach(function(btn){ btn.onclick = openSerialModal; });
+        
+        // --- THÊM ĐOẠN NÀY ---
+        dateInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                var today = new Date().toISOString().split('T')[0];
+                if(this.value && this.value < today) {
+                    alert('Hạn bảo hành không được nhỏ hơn ngày hiện tại!');
+                    this.value = ''; // Xóa trắng nếu chọn sai
+                }
+            });
         });
+        // ---------------------
     }
 
-    // [LOGIC QUAN TRỌNG] Ẩn sản phẩm đã chọn
-    function refreshImportProductOptions() {
-        var $rows = $('#productTable tbody tr');
+    function calculateRow(e) {
+        var row = e.target.closest('tr');
+        var price = parseFloat(row.querySelector('.price-input').value) || 0;
+        // Qty always from qty input; serials are stored in hidden input populated from modal
+        var qty = parseInt(row.querySelector('.qty-input').value) || 0;
+
+        var subtotal = qty * price;
         
-        // 1. Lấy danh sách mã hàng đã được chọn (trừ dòng trống)
+        // Format tiền tệ
+        row.querySelector('.subtotal').value = new Intl.NumberFormat('vi-VN').format(subtotal);
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        var total = 0;
+        var rows = document.querySelectorAll('#productTable tbody tr');
+        rows.forEach(row => {
+            var price = parseFloat(row.querySelector('.price-input').value) || 0;
+            var qty = parseInt(row.querySelector('.qty-input').value) || 0;
+            total += (qty * price);
+        });
+        document.getElementById('grandTotal').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
+    }
+
+    // Khởi chạy lần đầu
+    updateEvents();
+    // Lọc lại danh sách sản phẩm theo các dòng đã chọn
+    function refreshImportProductOptions() {
+        var tbody = document.querySelector('#productTable tbody');
+        if (!tbody) return;
         var selectedValues = [];
-        $rows.each(function() {
-            var val = $(this).find('.import-product-select').val();
+        var selects = tbody.querySelectorAll('select[name="product_id[]"]');
+        selects.forEach(function(sel) {
+            var val = sel.value;
             if (val) selectedValues.push(val);
         });
 
-        // 2. Duyệt qua từng dòng và từng option
-        $rows.each(function() {
-            var $select = $(this).find('.import-product-select');
-            var currentValue = $select.val();
-
-            $select.find('option').each(function() {
-                var optionValue = $(this).val();
-                if (!optionValue) return; // Bỏ qua option placeholder
-
-                // Nếu giá trị này đã được chọn ở dòng khác -> Disable nó
-                // (CSS ở trên sẽ lo việc ẩn những cái bị disabled đi)
-                if (selectedValues.indexOf(optionValue) !== -1 && optionValue !== currentValue) {
-                    $(this).prop('disabled', true);
+        selects.forEach(function(sel) {
+            var current = sel.value;
+            var options = sel.querySelectorAll('option');
+            options.forEach(function(opt) {
+                if (!opt.value) return; // skip placeholder
+                if (opt.value !== current && selectedValues.indexOf(opt.value) !== -1) {
+                    opt.disabled = true;
                 } else {
-                    $(this).prop('disabled', false);
+                    opt.disabled = false;
                 }
             });
-            
-            // Cần thiết để Select2 cập nhật lại trạng thái ngay lập tức nếu đang mở
-            // Tuy nhiên với disabled + CSS, Select2 thường tự render lại khi mở dropdown
+        });
+    }
+    // Trigger change on existing selects to set correct visibility
+    document.querySelectorAll('select[name="product_id[]"]').forEach(function(s){
+        var ev = new Event('change'); s.dispatchEvent(ev);
+    });
+    refreshImportProductOptions();
+
+    // --- Serial modal logic ---
+    // Modal elements (we'll create modal HTML below)
+    var currentRowIndex = null;
+
+    function openSerialModal(evt) {
+        var btn = (evt.currentTarget) ? evt.currentTarget : evt;
+        var tr = btn.closest('tr');
+        var table = document.querySelector('#productTable tbody');
+        // compute index of the row within tbody
+        var rows = Array.prototype.slice.call(table.querySelectorAll('tr'));
+        var idx = rows.indexOf(tr);
+        currentRowIndex = idx;
+
+        // get qty
+        var qty = parseInt(tr.querySelector('input[name="quantity[]"]').value) || 0;
+        if (qty <= 0) qty = 1;
+
+        // get existing serials from hidden input
+        var hidden = tr.querySelector('.serials-hidden');
+        var existing = [];
+        if (hidden && hidden.value.trim() !== '') {
+            existing = hidden.value.split(/\r\n|\r|\n/).map(function(s){ return s.trim(); }).filter(function(s){ return s !== ''; });
+        }
+
+        renderSerialModalRows(qty, existing);
+        var modal = document.getElementById('serialModal');
+        if (modal) {
+            var bs = new bootstrap.Modal(modal);
+            bs.show();
+            modal._bs = bs;
+        }
+    }
+
+    function renderSerialModalRows(count, existing) {
+        var body = document.querySelector('#serialModal tbody');
+        body.innerHTML = '';
+        for (var i = 0; i < count; i++) {
+            var val = existing[i] || '';
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td style="width:50px">' + (i+1) + '</td>' +
+                '<td><div class="input-group"><input type="text" class="form-control serial-input" value="' + escapeHtml(val) + '" placeholder="Nhập serial"></div></td>' +
+                '<td style="width:120px"><button type="button" class="btn btn-sm btn-outline-primary scan-serial">Quét</button></td>';
+            body.appendChild(tr);
+        }
+
+        // wire scan buttons
+        document.querySelectorAll('#serialModal .scan-serial').forEach(function(b){
+            b.onclick = function(e){
+                var row = e.currentTarget.closest('tr');
+                var input = row.querySelector('.serial-input');
+                if (!input) return;
+                var code = 'SCAN-' + Date.now() + '-' + Math.floor(Math.random()*1000);
+                input.value = code;
+            };
         });
     }
 
-    $(document).ready(function() {
-        initImportSelect2();
-        refreshImportProductOptions();
-
-        // Khi thay đổi sản phẩm -> Cập nhật lại toàn bộ danh sách
-        $(document).on('change', '.import-product-select', function() {
-            refreshImportProductOptions();
-            
-            // Cập nhật giao diện LO/SERIAL (như cũ)
-            var loai = this.options[this.selectedIndex] ? this.options[this.selectedIndex].getAttribute('data-loai') : null;
-            var tr = this.closest('tr');
-            var qty = tr.querySelector('input[name="quantity[]"]');
-            var serialBtn = tr.querySelector('.open-serial-modal');
-            var badge = tr.querySelector('.type-badge');
-            
-            if (loai === 'SERIAL') {
-                if (serialBtn) serialBtn.style.display = '';
-                if (badge) { badge.innerText = 'SERIAL'; badge.className = 'badge bg-success type-badge'; }
-            } else {
-                if (serialBtn) serialBtn.style.display = 'none';
-                if (badge) { badge.innerText = 'LO'; badge.className = 'badge bg-secondary type-badge'; }
-            }
-            
-            // Tính lại tiền
-            var ev = new Event('input', { bubbles: true });
-            if (qty) qty.dispatchEvent(ev);
-        });
-
-        // Thêm dòng mới
-        document.getElementById('addRow').addEventListener('click', function() {
-            var tableBody = document.querySelector('#productTable tbody');
-            var firstRow = tableBody.rows[0];
-            
-            // Hủy Select2 ở dòng mẫu trước khi clone để tránh lỗi sự kiện
-            var $firstSelect = $(firstRow).find('.import-product-select');
-            if ($firstSelect.data('select2')) {
-                $firstSelect.select2('destroy');
-            }
-
-            var newRow = firstRow.cloneNode(true);
-
-            // Tái khởi tạo lại Select2 cho dòng đầu (vì vừa bị destroy)
-            initImportSelect2(firstRow); 
-            
-            // Reset dữ liệu dòng mới
-            $(newRow).find('input').val('');
-            $(newRow).find('input[type="number"]').val(0);
-            $(newRow).find('input[name="quantity[]"]').val(1);
-            $(newRow).find('select').val(''); 
-            $(newRow).find('.type-badge').text('LO').attr('class', 'badge bg-secondary type-badge');
-            $(newRow).find('.open-serial-modal').hide();
-
-            tableBody.appendChild(newRow);
-
-            // Khởi tạo Select2 cho dòng mới
-            initImportSelect2(newRow);
-            updateEvents(); 
-
-            // QUAN TRỌNG: Gọi hàm này để ẩn các sản phẩm đã chọn ở trên khỏi dòng mới
-            refreshImportProductOptions();
-        });
-
-        // Xóa dòng
-        document.getElementById('productTable').addEventListener('click', function(e) {
-            if (e.target && e.target.classList.contains('removeRow')) {
-                var rowCount = document.getElementById('productTable').tBodies[0].rows.length;
-                if (rowCount > 1) {
-                    e.target.closest('tr').remove();
-                    calculateTotal();
-                    refreshImportProductOptions(); // Gọi lại để nhả (hiện lại) sản phẩm của dòng vừa xóa
-                } else {
-                    alert('Phải có ít nhất 1 dòng sản phẩm!');
-                }
-            }
-        });
-        
-        // --- CÁC HÀM TÍNH TOÁN & MODAL (GIỮ NGUYÊN) ---
-        function updateEvents() {
-            var qtyInputs = document.querySelectorAll('.qty-input');
-            var priceInputs = document.querySelectorAll('.price-input');
-            var dateInputs = document.querySelectorAll('input[type="date"]');
-            var serialHidden = document.querySelectorAll('.serials-hidden');
-
-            qtyInputs.forEach(input => { input.oninput = calculateRow; });
-            priceInputs.forEach(input => { input.oninput = calculateRow; });
-            serialHidden.forEach(sh => { sh.onchange = calculateRow; });
-            
-            dateInputs.forEach(input => {
-                input.onchange = function() {
-                    var today = new Date().toISOString().split('T')[0];
-                    if(this.value && this.value < today) {
-                        alert('Hạn bảo hành không được nhỏ hơn ngày hiện tại!');
-                        this.value = ''; 
-                    }
-                };
-            });
-        }
-
-        function calculateRow(e) {
-            var row = e.target.closest('tr');
-            var price = parseFloat(row.querySelector('.price-input').value) || 0;
-            var qty = parseInt(row.querySelector('.qty-input').value) || 0;
-            var subtotal = qty * price;
-            row.querySelector('.subtotal').value = new Intl.NumberFormat('vi-VN').format(subtotal);
-            calculateTotal();
-        }
-
-        function calculateTotal() {
-            var total = 0;
-            var rows = document.querySelectorAll('#productTable tbody tr');
-            rows.forEach(row => {
-                var price = parseFloat(row.querySelector('.price-input').value) || 0;
-                var qty = parseInt(row.querySelector('.qty-input').value) || 0;
-                total += (qty * price);
-            });
-            document.getElementById('grandTotal').innerText = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(total);
-        }
-
-        var currentRowIndex = null;
-        document.addEventListener('click', function(e){
-            if(e.target && e.target.classList.contains('open-serial-modal')){
-                openSerialModal(e);
-            }
-        });
-
-        function openSerialModal(evt) {
-            var btn = (evt.currentTarget) ? evt.currentTarget : evt.target;
-            var tr = btn.closest('tr');
-            var table = document.querySelector('#productTable tbody');
-            var rows = Array.prototype.slice.call(table.querySelectorAll('tr'));
-            currentRowIndex = rows.indexOf(tr);
-
-            var qty = parseInt(tr.querySelector('input[name="quantity[]"]').value) || 0;
-            if (qty <= 0) qty = 1;
-
-            var hidden = tr.querySelector('.serials-hidden');
-            var existing = [];
-            if (hidden && hidden.value.trim() !== '') {
-                existing = hidden.value.split(/\r\n|\r|\n/).map(s => s.trim()).filter(s => s !== '');
-            }
-
-            renderSerialModalRows(qty, existing);
-            var modal = document.getElementById('serialModal');
-            var bs = bootstrap.Modal.getOrCreateInstance(modal);
-            bs.show();
-        }
-
-        function renderSerialModalRows(count, existing) {
-            var body = document.querySelector('#serialModal tbody');
-            body.innerHTML = '';
-            for (var i = 0; i < count; i++) {
-                var val = existing[i] || '';
-                var tr = document.createElement('tr');
-                tr.innerHTML = '<td style="width:50px">' + (i+1) + '</td>' +
-                    '<td><div class="input-group"><input type="text" class="form-control serial-input" value="' + escapeHtml(val) + '" placeholder="Nhập serial"></div></td>' +
-                    '<td style="width:120px"><button type="button" class="btn btn-sm btn-outline-primary scan-serial">Quét</button></td>';
-                body.appendChild(tr);
-            }
-            
-            body.querySelectorAll('.scan-serial').forEach(btn => {
-                btn.onclick = function(e){
-                    var row = e.currentTarget.closest('tr');
-                    var input = row.querySelector('.serial-input');
-                    var code = 'SCAN-' + Date.now().toString().slice(-6) + '-' + Math.floor(Math.random()*100);
-                    input.value = code;
-                };
-            });
-        }
-
-        document.getElementById('serialSaveBtn').addEventListener('click', function(){
+    // Save serials from modal into hidden input of the row
+    (function(){
+        function saveHandler(){
             var modal = document.getElementById('serialModal');
             var rows = modal.querySelectorAll('tbody tr');
             var vals = [];
-            rows.forEach(r => {
+            rows.forEach(function(r){
                 var v = r.querySelector('.serial-input').value.trim();
                 if (v !== '') vals.push(v);
             });
 
+            // find the row
             var table = document.querySelector('#productTable tbody');
             var tr = table.querySelectorAll('tr')[currentRowIndex];
             if (tr) {
                 var hidden = tr.querySelector('.serials-hidden');
                 if (hidden) hidden.value = vals.join('\n');
+                // also update qty to match number of serials if desired
                 if (vals.length > 0) {
                     var qtyInput = tr.querySelector('input[name="quantity[]"]');
-                    if (qtyInput) {
-                        qtyInput.value = vals.length;
-                        qtyInput.dispatchEvent(new Event('input', { bubbles: true })); 
-                    }
+                    if (qtyInput) qtyInput.value = vals.length;
+                    qtyInput.dispatchEvent(new Event('input', { bubbles: true }));
                 }
             }
-            var bs = bootstrap.Modal.getInstance(modal);
-            bs.hide();
-        });
 
-        function escapeHtml(s) { return (s+'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-        updateEvents();
+            // hide modal
+            if (modal && modal._bs) modal._bs.hide();
+        }
+
+        var btn = document.getElementById('serialSaveBtn');
+        if (btn) {
+            btn.addEventListener('click', saveHandler);
+        } else {
+            // if not yet present, attach after DOM ready
+            document.addEventListener('DOMContentLoaded', function(){
+                var b2 = document.getElementById('serialSaveBtn');
+                if (b2) b2.addEventListener('click', saveHandler);
+            });
+        }
+    })();
+
+    // Utility: escape HTML for insertion into value
+    function escapeHtml(s) { return (s+'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+</script>
+
+<script>
+    // Validate chi tiết hàng nhập trước khi submit
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('importForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            var tbodyRows = document.querySelectorAll('#productTable tbody tr');
+            var hasError = false;
+            var messages = [];
+            var hasSerialMissing = false;
+            var hasSerialCountMismatch = false;
+
+            tbodyRows.forEach(function(row, index) {
+                var lineNumber = index + 1;
+
+                var productSelect = row.querySelector('select[name="product_id[]"]');
+                var expiryInput = row.querySelector('input[name="expiry[]"]');
+                var qtyInput = row.querySelector('input[name="quantity[]"]');
+                var priceInput = row.querySelector('input[name="price[]"]');
+                var serialHidden = row.querySelector('.serials-hidden');
+
+                var product = productSelect ? productSelect.value : '';
+                if (!product) {
+                    hasError = true;
+                    if (messages.indexOf('Chưa chọn đủ sản phẩm cho tất cả các dòng.') === -1) {
+                        messages.push('Chưa chọn đủ sản phẩm cho tất cả các dòng.');
+                    }
+                }
+
+                if (!expiryInput || !expiryInput.value) {
+                    hasError = true;
+                    if (messages.indexOf('Phải nhập Hạn bảo hành cho tất cả các dòng.') === -1) {
+                        messages.push('Phải nhập Hạn bảo hành cho tất cả các dòng.');
+                    }
+                }
+
+                var qty = qtyInput ? parseInt(qtyInput.value) || 0 : 0;
+
+                var price = priceInput ? parseFloat(priceInput.value) || 0 : 0;
+                if (price < 0) {
+                    hasError = true;
+                    if (messages.indexOf('Đơn giá không hợp lệ ở một số dòng.') === -1) {
+                        messages.push('Đơn giá không hợp lệ ở một số dòng.');
+                    }
+                }
+
+                // Nếu là hàng SERIAL thì bắt buộc serial đủ số lượng
+                if (productSelect && productSelect.value) {
+                    var opt = productSelect.options[productSelect.selectedIndex];
+                    var loai = opt ? opt.getAttribute('data-loai') : null;
+                    if (loai === 'SERIAL') {
+                        var serials = [];
+                        if (serialHidden && serialHidden.value.trim() !== '') {
+                            serials = serialHidden.value.split(/\r\n|\r|\n/)
+                                .map(function(s){ return s.trim(); })
+                                .filter(function(s){ return s !== ''; });
+                        }
+                        if (serials.length === 0) {
+                            hasError = true;
+                            hasSerialMissing = true;
+                        } else {
+                            // Ép số lượng phải đúng bằng số serial, nếu không thì chặn
+                            if (qtyInput) {
+                                qty = parseInt(qtyInput.value) || 0;
+                            }
+                            if (serials.length !== qty) {
+                                hasError = true;
+                                hasSerialCountMismatch = true;
+                            }
+                        }
+                    } else {
+                        // Hàng thường: số lượng phải > 0
+                        if (qty <= 0) {
+                            hasError = true;
+                            if (messages.indexOf('Số lượng tất cả các dòng phải > 0.') === -1) {
+                                messages.push('Số lượng tất cả các dòng phải > 0.');
+                            }
+                        }
+                    }
+                } else {
+                    // Chưa chọn sản phẩm nhưng vẫn nhập số lượng: vẫn check số lượng > 0 nếu cần
+                    if (qty <= 0) {
+                        hasError = true;
+                        if (messages.indexOf('Số lượng tất cả các dòng phải > 0.') === -1) {
+                            messages.push('Số lượng tất cả các dòng phải > 0.');
+                        }
+                    }
+                }
+            });
+
+            if (hasSerialMissing) {
+                messages.push('Hàng SERIAL phải nhập đủ serial cho tất cả các dòng.');
+            }
+            if (hasSerialCountMismatch) {
+                messages.push('Số lượng serial phải đúng bằng Số lượng cho tất cả các dòng SERIAL.');
+            }
+
+            if (hasError) {
+                e.preventDefault();
+                var box = document.getElementById('importErrorBox');
+                if (box) {
+                    box.classList.remove('d-none');
+                    box.innerHTML = '<strong>Vui lòng kiểm tra lại chi tiết hàng nhập:</strong>' +
+                        '<ul class="mb-0">' +
+                        messages.map(function(m){ return '<li>' + m + '</li>'; }).join('') +
+                        '</ul>';
+                    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    alert('Vui lòng kiểm tra lại chi tiết hàng nhập:\n\n' + messages.join('\n'));
+                }
+            }
+        });
     });
 </script>
 
+<script>
+    // --- Liên kết Đơn đặt hàng với Phiếu nhập ---
+    document.addEventListener('DOMContentLoaded', function() {
+        const nccSelect = document.querySelector('select[name="maNCC"]');
+        const orderSelect = document.getElementById('orderSelect');
+        const tbody = document.querySelector('#productTable tbody');
+
+        if (!nccSelect || !orderSelect || !tbody) return;
+
+        // Khi chọn NCC: load danh sách đơn đặt hàng
+        nccSelect.addEventListener('change', function() {
+            orderSelect.innerHTML = '<option value="">-- Chọn đơn đặt hàng --</option>';
+            const maNCC = this.value;
+            if (!maNCC) return;
+
+            fetch('<?php echo BASE_URL; ?>/phieudathang/ordersBySupplier?maNCC=' + encodeURIComponent(maNCC))
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data) return;
+                    res.data.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.maDH;
+                        opt.textContent = o.maDH + ' - ' + (o.ngayDatHang || '');
+                        orderSelect.appendChild(opt);
+                    });
+                })
+                .catch(err => console.error('Load orders error', err));
+        });
+        // Khi chọn đơn đặt hàng: load chi tiết vào bảng nhập
+        orderSelect.addEventListener('change', function() {
+            const maDH = this.value;
+            if (!maDH) return;
+
+            // lưu lại mã đơn được chọn vào hidden để backend biết liên kết phiếu nhập với đơn đặt
+            var hiddenOrder = document.getElementById('selectedOrderId');
+            if (hiddenOrder) hiddenOrder.value = maDH;
+
+            fetch('<?php echo BASE_URL; ?>/phieudathang/lines?maDH=' + encodeURIComponent(maDH))
+                .then(r => r.json())
+                .then(res => {
+                    if (!res.success || !res.data) return;
+
+                    const templateRow = document.querySelector('#productTable tbody tr');
+                    if (!templateRow) return;
+
+                    tbody.innerHTML = '';
+
+                    res.data.forEach(line => {
+                        const newRow = templateRow.cloneNode(true);
+
+                        const select = newRow.querySelector('select[name="product_id[]"]');
+                        if (select) {
+                            select.value = line.maHH;
+                        }
+
+                        const orderedInput = newRow.querySelector('.ordered-qty');
+                        if (orderedInput) {
+                            orderedInput.value = line.soLuong; // số lượng đặt ban đầu
+                        }
+
+                        const qtyInput = newRow.querySelector('input[name="quantity[]"]');
+                        if (qtyInput) {
+                            // Nếu backend trả soLuongConLai (dựa trên soLuongDaNhap) thì dùng để nhập tiếp phần thiếu
+                            const remain = (typeof line.soLuongConLai !== 'undefined' && line.soLuongConLai !== null)
+                                ? line.soLuongConLai
+                                : line.soLuong;
+                            qtyInput.value = remain;
+                        }
+
+                        const priceInput = newRow.querySelector('input[name="price[]"]');
+                        if (priceInput) {
+                            priceInput.value = line.donGia || 0;
+                        }
+
+                        const sh = newRow.querySelector('.serials-hidden');
+                        if (sh) sh.value = '';
+                        const subtotal = newRow.querySelector('.subtotal');
+                        if (subtotal) subtotal.value = '0';
+
+                        tbody.appendChild(newRow);
+                    });
+
+                    updateEvents();
+                    // Sau khi gán lại handler, trigger change để badge & nút serial đúng theo loại hàng
+                    document.querySelectorAll('#productTable tbody select[name="product_id[]"]').forEach(function(sel){
+                        sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    });
+                    calculateTotal();
+                })
+                .catch(err => console.error('Load order lines error', err));
+        });
+    });
+</script>
+
+<!-- Serial input modal -->
 <div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -390,7 +601,9 @@
                 <div class="table-responsive">
                     <table class="table table-sm table-bordered">
                         <thead class="table-light"><tr><th>#</th><th>Serial</th><th></th></tr></thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <!-- rows injected here -->
+                        </tbody>
                     </table>
                 </div>
             </div>

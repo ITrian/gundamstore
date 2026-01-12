@@ -78,5 +78,39 @@ class PhieudathangController extends Controller {
         $data = ['title' => 'Chi tiết đơn đặt hàng', 'order' => $order];
         $this->view('phieudathang/show', $data);
     }
+
+    // API: lấy danh sách đơn đặt hàng theo nhà cung cấp (dùng cho form phiếu nhập)
+    public function ordersBySupplier() {
+        header('Content-Type: application/json; charset=utf-8');
+        $maNCC = $_GET['maNCC'] ?? '';
+        if ($maNCC === '') {
+            echo json_encode(['success' => false, 'message' => 'Thiếu mã nhà cung cấp']);
+            return;
+        }
+
+        try {
+            $orders = $this->orderModel->getOrdersBySupplier($maNCC);
+            echo json_encode(['success' => true, 'data' => $orders]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    // API: lấy chi tiết đơn đặt hàng (dùng để đổ vào chi tiết phiếu nhập)
+    public function lines() {
+        header('Content-Type: application/json; charset=utf-8');
+        $maDH = $_GET['maDH'] ?? '';
+        if ($maDH === '') {
+            echo json_encode(['success' => false, 'message' => 'Thiếu mã đơn hàng']);
+            return;
+        }
+
+        try {
+            $lines = $this->orderModel->getOrderLinesWithProduct($maDH);
+            echo json_encode(['success' => true, 'data' => $lines]);
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 }
 ?>

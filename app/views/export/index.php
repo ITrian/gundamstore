@@ -27,20 +27,26 @@
                         <?php if (!empty($data['orders'])): ?>
                             <?php foreach ($data['orders'] as $item): ?>
                             <tr>
-                                <td><strong><?php echo $item['maPX']; ?></strong></td>
-                                <td>
-                                    <?php echo $item['tenKH']; ?><br>
-                                    <small class="text-muted">Người tạo: <?php echo $item['nguoiTao']; ?></small>
-                                </td>
+                                <!-- 1. Mã PX -->
+                                <td><strong><?php echo htmlspecialchars($item['maPX']); ?></strong></td>
+
+                                <!-- 2. Ngày Xuất -->
                                 <td><?php echo date('d/m/Y H:i', strtotime($item['ngayXuat'])); ?></td>
+
+                                <!-- 3. Khách Hàng -->
+                                <td><?php echo htmlspecialchars($item['tenKH']); ?></td>
+
+                                <!-- 4. Nhân viên thực hiện -->
+                                <td><?php echo htmlspecialchars($item['nguoiTao']); ?></td>
+
+                                <!-- 5. Tổng Giá Trị Xuất -->
                                 <td class="text-end fw-bold text-primary">
                                     <?php echo number_format($item['tongTien']); ?> đ
                                 </td>
+
+                                <!-- 6. Thao tác -->
                                 <td>
-                                    <span class="badge bg-success">Đã xuất</span>
-                                </td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-info text-white">Chi tiết</a>
+                                    <a href="<?php echo BASE_URL; ?>/export/show/<?php echo urlencode($item['maPX']); ?>" class="btn btn-sm btn-info text-white mt-1">Chi tiết</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

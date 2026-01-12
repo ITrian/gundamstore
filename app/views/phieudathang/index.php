@@ -16,6 +16,7 @@
                             <th>Mã DH</th>
                             <th>Nhà cung cấp</th>
                             <th>Ngày đặt</th>
+                            <th>Tổng giá trị đặt</th>
                             <th>Trạng thái</th>
                             <th>Thao tác</th>
                         </tr>
@@ -27,7 +28,19 @@
                                     <td class="fw-bold text-primary"><?php echo $o['maDH']; ?></td>
                                     <td><?php echo $o['tenNCC'] ?? ''; ?></td>
                                     <td><?php echo $o['ngayDatHang']; ?></td>
-                                    <td><?php echo $o['trangThai']; ?></td>
+                                    <td><?php echo number_format($o['tongGiaTri'] ?? 0, 0, ',', '.'); ?> đ</td>
+                                    <td>
+                                        <?php
+                                            // 0 = Chờ nhập, 1 = Nhập thiếu, 2 = Nhập đủ
+                                            $label = 'Không rõ';
+                                            switch ((int)$o['trangThai']) {
+                                                case 0: $label = 'Chờ nhập'; break;
+                                                case 1: $label = 'Nhập thiếu'; break;
+                                                case 2: $label = 'Nhập đủ'; break;
+                                            }
+                                            echo $label;
+                                        ?>
+                                    </td>
                                     <td>
                                         <a href="<?php echo BASE_URL; ?>/phieudathang/show/<?php echo $o['maDH']; ?>" class="btn btn-sm btn-outline-info">Xem</a>
                                     </td>

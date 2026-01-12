@@ -75,7 +75,7 @@
                             </select>
                         </div>
 
-                        
+                        <!-- Supplier field removed because hanghoa.maNCC was deleted -->
                     </div>
 
                     <div class="col-12">
