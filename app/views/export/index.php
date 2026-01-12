@@ -19,7 +19,7 @@
                             <th>Ngày Xuất</th>
                             <th>Khách Hàng</th>
                             <th>Nhân viên thực hiện</th>
-                            <th>Ghi Chú</th>
+                            <th>Tổng Giá Trị Xuất</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>

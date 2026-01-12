@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Máy chủ: 127.0.0.1:3306
--- Thời gian đã tạo: Th1 09, 2026 lúc 10:19 AM
+-- Thời gian đã tạo: Th1 12, 2026 lúc 06:55 AM
 -- Phiên bản máy phục vụ: 9.1.0
 -- Phiên bản PHP: 8.3.14
 
@@ -32,10 +32,24 @@ CREATE TABLE IF NOT EXISTS `ct_phieudathang` (
   `maDH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `soLuong` int NOT NULL,
+  `soLuongDaNhap` int DEFAULT '0',
   `donGia` decimal(18,2) DEFAULT NULL,
   PRIMARY KEY (`maDH`,`maHH`),
   KEY `fk_ctpdh_hh` (`maHH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ct_phieudathang`
+--
+
+INSERT INTO `ct_phieudathang` (`maDH`, `maHH`, `soLuong`, `soLuongDaNhap`, `donGia`) VALUES
+('PD1768186155', 'HH001', 2, 2, 7000000.00),
+('PD1768186155', 'HH002', 3, 3, 445000.00),
+('PD1768186155', 'HH003', 5, 5, 600000.00),
+('PD1768194143', 'HH003', 1, 3, 0.00),
+('PD1768194229', 'HH002', 3, 4, 7000000.00),
+('PD1768200131', 'HH002', 5, 8, 750000.00),
+('PD1768200131', 'HH003', 3, 5, 500000.00);
 
 -- --------------------------------------------------------
 
@@ -73,11 +87,29 @@ CREATE TABLE IF NOT EXISTS `ct_phieunhap` (
 --
 
 INSERT INTO `ct_phieunhap` (`maPN`, `maHH`, `soLuong`, `donGia`) VALUES
-('PN-260109-001', 'HH003', 1, 1.00),
-('PN1767935891', 'HH001', 5, 90.00),
-('PN1767935891', 'HH003', 3, 36.00),
-('PN1767936297', 'HH003', 1, 2.00),
-('PN1767936519', 'HH003', 1, 1.00);
+('PN-260112-001', 'HH001', 1, 7000000.00),
+('PN-260112-001', 'HH002', 3, 445000.00),
+('PN-260112-001', 'HH003', 4, 600000.00),
+('PN-260112-002', 'HH001', 1, 7000000.00),
+('PN-260112-002', 'HH002', 1, 445000.00),
+('PN-260112-002', 'HH003', 3, 600000.00),
+('PN-260112-003', 'HH001', 1, 7000000.00),
+('PN-260112-003', 'HH002', 3, 445000.00),
+('PN-260112-003', 'HH003', 2, 600000.00),
+('PN-260112-004', 'HH001', 1, 7000000.00),
+('PN-260112-004', 'HH003', 3, 600000.00),
+('PN-260112-005', 'HH001', 1, 7000000.00),
+('PN-260112-005', 'HH002', 3, 445000.00),
+('PN-260112-005', 'HH003', 2, 600000.00),
+('PN-260112-006', 'HH001', 1, 7000000.00),
+('PN-260112-006', 'HH003', 3, 600000.00),
+('PN-260112-007', 'HH003', 3, 50.00),
+('PN-260112-008', 'HH002', 4, 7000000.00),
+('PN-260112-009', 'HH002', 3, 750000.00),
+('PN-260112-009', 'HH003', 2, 500000.00),
+('PN-260112-010', 'HH002', 5, 750000.00),
+('PN-260112-010', 'HH003', 3, 500000.00),
+('PN-260112-011', 'HH001', 4, 100000.00);
 
 -- --------------------------------------------------------
 
@@ -93,6 +125,43 @@ CREATE TABLE IF NOT EXISTS `ct_phieuxuat` (
   `donGia` decimal(18,2) DEFAULT NULL,
   PRIMARY KEY (`maPX`,`maHH`),
   KEY `fk_ctpx_hh` (`maHH`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `ct_phieuxuat_lo`
+--
+
+DROP TABLE IF EXISTS `ct_phieuxuat_lo`;
+CREATE TABLE IF NOT EXISTS `ct_phieuxuat_lo` (
+  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maLo` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maViTri` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `soLuong` int NOT NULL,
+  PRIMARY KEY (`maPX`,`maHH`,`maLo`,`maViTri`),
+  KEY `fk_ctpx_lo_lo` (`maLo`),
+  KEY `fk_ctpx_lo_vt` (`maViTri`),
+  KEY `fk_ctpx_lo_px` (`maPX`),
+  KEY `fk_ctpx_lo_hh` (`maHH`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `ct_phieuxuat_serial`
+--
+
+DROP TABLE IF EXISTS `ct_phieuxuat_serial`;
+CREATE TABLE IF NOT EXISTS `ct_phieuxuat_serial` (
+  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `maHH` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `serial` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`maPX`,`maHH`,`serial`),
+  KEY `fk_ctpx_ser_px` (`maPX`),
+  KEY `fk_ctpx_ser_hh` (`maHH`),
+  KEY `fk_ctpx_ser_serial` (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -114,7 +183,8 @@ CREATE TABLE IF NOT EXISTS `danhmuc` (
 
 INSERT INTO `danhmuc` (`maDanhMuc`, `tenDanhMuc`) VALUES
 ('DM01', 'Tủ Lạnh'),
-('DM02', 'Nồi cơm điện');
+('DM02', 'Nồi cơm điện'),
+('DM03', 'Quạt điện');
 
 -- --------------------------------------------------------
 
@@ -158,7 +228,6 @@ CREATE TABLE IF NOT EXISTS `hanghoa` (
   `maHH` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tenHH` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
   `maDVT` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `maNCC` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
   `thuongHieu` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `model` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `moTa` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -168,7 +237,6 @@ CREATE TABLE IF NOT EXISTS `hanghoa` (
   `thoiGianBaoHanh` int DEFAULT '12' COMMENT 'Thời gian bảo hành cho khách (Tháng)',
   PRIMARY KEY (`maHH`),
   KEY `fk_hanghoa_dvt` (`maDVT`),
-  KEY `fk_hanghoa_ncc` (`maNCC`),
   KEY `fk_hanghoa_danhmuc` (`maDanhMuc`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -176,9 +244,10 @@ CREATE TABLE IF NOT EXISTS `hanghoa` (
 -- Đang đổ dữ liệu cho bảng `hanghoa`
 --
 
-INSERT INTO `hanghoa` (`maHH`, `tenHH`, `maDVT`, `maNCC`, `thuongHieu`, `model`, `moTa`, `maDanhMuc`, `loaiHang`, `heSoChiemCho`, `thoiGianBaoHanh`) VALUES
-('HH001', 'Tủ lạnh aqua inverter', 'DVT01', 'NCC1', 'AQUA', 'AQR-B390MA', 'Ngăn đá dưới - 2 cánh\r\nDung tích tổng: 350 lít\r\nDung tích sử dụng: 324 lít - 3 - 4 người\r\nDung tích ngăn đá: 91 lít\r\nDung tích ngăn lạnh: 199 lít\r\nDung tích ngăn chuyển đổi: 34 lít\r\nChất liệu cửa tủ lạnh: Mặt thép\r\nChất liệu khay ngăn lạnh: Kính chịu lực\r\nChất liệu ống dẫn gas, dàn lạnh: Ống dẫn gas', 'DM01', 'SERIAL', 50, 12),
-('HH003', 'Nồi cơm điện toshiba', 'DVT01', 'NCC1', 'toshiba', 'rc-10jfmvn', '', 'DM02', 'SERIAL', 20, 12);
+INSERT INTO `hanghoa` (`maHH`, `tenHH`, `maDVT`, `thuongHieu`, `model`, `moTa`, `maDanhMuc`, `loaiHang`, `heSoChiemCho`, `thoiGianBaoHanh`) VALUES
+('HH001', 'Tủ lạnh aqua inverter', 'DVT01', 'AQUA', 'AQR-B390MA', 'Ngăn đá dưới - 2 cánh\r\nDung tích tổng: 350 lít\r\nDung tích sử dụng: 324 lít - 3 - 4 người\r\nDung tích ngăn đá: 91 lít\r\nDung tích ngăn lạnh: 199 lít\r\nDung tích ngăn chuyển đổi: 34 lít\r\nChất liệu cửa tủ lạnh: Mặt thép\r\nChất liệu khay ngăn lạnh: Kính chịu lực\r\nChất liệu ống dẫn gas, dàn lạnh: Ống dẫn gas', 'DM01', 'SERIAL', 50, 12),
+('HH002', 'Quạt bàn Senko', 'DVT01', 'Senko', 'B1612 47W', 'Màu xanh dương', 'DM03', 'LO', 10, 12),
+('HH003', 'Nồi cơm điện toshiba', 'DVT01', 'toshiba', 'rc-10jfmvn', '', 'DM02', 'SERIAL', 20, 12);
 
 -- --------------------------------------------------------
 
@@ -202,16 +271,41 @@ CREATE TABLE IF NOT EXISTS `hanghoa_serial` (
 --
 
 INSERT INTO `hanghoa_serial` (`serial`, `maLo`, `trangThai`, `maViTri`) VALUES
-('SCAN-1767935866025-559', 'LO202601090001', 1, 'A-1-1'),
-('SCAN-1767935866485-39', 'LO202601090001', 1, 'A-1-1'),
-('SCAN-1767935866825-741', 'LO202601090001', 1, 'A-1-1'),
-('SCAN-1767935879571-571', 'LO202601090002', 1, 'A-1-2'),
-('SCAN-1767935879916-386', 'LO202601090002', 1, 'A-1-2'),
-('SCAN-1767935880403-752', 'LO202601090002', 1, 'A-1-3'),
-('SCAN-1767935880729-585', 'LO202601090002', 1, 'A-1-3'),
-('SCAN-1767935881086-103', 'LO202601090002', 1, 'A-1-4'),
-('SCAN-1767936276939-458', 'LO202601090003', 1, 'A-1-1'),
-('SCAN-1767936863392-775', 'LO202601090005', 1, 'A-1-4');
+('SCAN-1768189270439-431', 'LO202601120001', 1, 'A-1-1'),
+('SCAN-1768189272950-575', 'LO202601120003', 1, 'A-1-1'),
+('SCAN-1768189273228-573', 'LO202601120003', 1, 'A-1-2'),
+('SCAN-1768189273558-584', 'LO202601120003', 1, 'A-1-2'),
+('SCAN-1768189273866-42', 'LO202601120003', 1, 'A-1-2'),
+('SCAN-1768190869151-188', 'LO202601120004', 1, 'A-1-3'),
+('SCAN-1768190871146-997', 'LO202601120006', 1, 'A-1-2'),
+('SCAN-1768190871465-525', 'LO202601120006', 1, 'A-1-3'),
+('SCAN-1768190871743-801', 'LO202601120006', 1, 'A-1-3'),
+('SCAN-1768191857075-326', 'LO202601120007', 1, 'A-1-1'),
+('SCAN-1768191859413-637', 'LO202601120009', 1, 'A-1-1'),
+('SCAN-1768191860188-742', 'LO202601120009', 1, 'A-1-1'),
+('SCAN-1768192047305-573', 'LO202601120010', 1, 'A-1-1'),
+('SCAN-1768192049064-577', 'LO202601120011', 1, 'A-1-1'),
+('SCAN-1768192049387-291', 'LO202601120011', 1, 'A-1-1'),
+('SCAN-1768192049890-899', 'LO202601120011', 1, 'A-1-1'),
+('SCAN-1768193937875-223', 'LO202601120012', 1, 'A-1-1'),
+('SCAN-1768193939747-368', 'LO202601120014', 1, 'A-1-1'),
+('SCAN-1768193940124-686', 'LO202601120014', 1, 'A-1-1'),
+('SCAN-1768194023675-525', 'LO202601120015', 1, 'A-1-1'),
+('SCAN-1768194025444-913', 'LO202601120016', 1, 'A-1-1'),
+('SCAN-1768194025792-964', 'LO202601120016', 1, 'A-1-1'),
+('SCAN-1768194026090-16', 'LO202601120016', 1, 'A-1-1'),
+('SCAN-1768194173383-856', 'LO202601120017', 1, 'A-1-1'),
+('SCAN-1768194173724-785', 'LO202601120017', 1, 'A-1-1'),
+('SCAN-1768194174047-727', 'LO202601120017', 1, 'A-1-1'),
+('SCAN-1768200295940-917', 'LO202601120020', 1, 'A-1-1'),
+('SCAN-1768200296237-82', 'LO202601120020', 1, 'A-1-1'),
+('SCAN-1768200434576-755', 'LO202601120022', 1, 'A-1-1'),
+('SCAN-1768200434923-954', 'LO202601120022', 1, 'A-1-1'),
+('SCAN-1768200435323-182', 'LO202601120022', 1, 'A-1-1'),
+('SCAN-1768200491548-637', 'LO202601120023', 1, 'A-1-1'),
+('SCAN-1768200491846-953', 'LO202601120023', 1, 'A-1-1'),
+('SCAN-1768200492379-828', 'LO202601120023', 1, 'A-1-1'),
+('SCAN-1768200493078-88', 'LO202601120023', 1, 'A-1-4');
 
 -- --------------------------------------------------------
 
@@ -229,6 +323,15 @@ CREATE TABLE IF NOT EXISTS `khachhang` (
   `trangThai` tinyint DEFAULT '1',
   PRIMARY KEY (`maKH`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `khachhang`
+--
+
+INSERT INTO `khachhang` (`maKH`, `tenKH`, `diaChi`, `sdt`, `email`, `trangThai`) VALUES
+('KH00001', 'Tô Nhật Hào', '180 cao lỗ p. chánh hưng tp.hcm', '0813956301', '123@gmail.com', 1),
+('KH00002', '1', '1', '1', '123@gmail.com', 1),
+('KH00003', 'Nguyễn Đình Trí', 'nhà bè', '0123456789', '123@gmail.com', 1);
 
 -- --------------------------------------------------------
 
@@ -254,11 +357,29 @@ CREATE TABLE IF NOT EXISTS `lohang` (
 --
 
 INSERT INTO `lohang` (`maLo`, `maPN`, `maHH`, `soLuongNhap`, `ngayNhap`, `hanBaoHanh`) VALUES
-('LO202601090001', 'PN1767935891', 'HH003', 3, '2026-01-09', '2026-01-29'),
-('LO202601090002', 'PN1767935891', 'HH001', 5, '2026-01-09', '2026-01-31'),
-('LO202601090003', 'PN1767936297', 'HH003', 1, '2026-01-09', '2026-01-10'),
-('LO202601090004', 'PN1767936519', 'HH003', 1, '2026-01-09', '2026-01-11'),
-('LO202601090005', 'PN-260109-001', 'HH003', 1, '2026-01-09', '2026-01-27');
+('LO202601120001', 'PN-260112-001', 'HH001', 1, '2026-01-12', '2026-01-15'),
+('LO202601120002', 'PN-260112-001', 'HH002', 3, '2026-01-12', '2026-01-15'),
+('LO202601120003', 'PN-260112-001', 'HH003', 4, '2026-01-12', '2026-01-15'),
+('LO202601120004', 'PN-260112-002', 'HH001', 1, '2026-01-12', '2026-01-27'),
+('LO202601120005', 'PN-260112-002', 'HH002', 1, '2026-01-12', '2026-01-27'),
+('LO202601120006', 'PN-260112-002', 'HH003', 3, '2026-01-12', '2026-01-27'),
+('LO202601120007', 'PN-260112-003', 'HH001', 1, '2026-01-12', '2026-02-03'),
+('LO202601120008', 'PN-260112-003', 'HH002', 3, '2026-01-12', '2026-02-03'),
+('LO202601120009', 'PN-260112-003', 'HH003', 2, '2026-01-12', '2026-02-03'),
+('LO202601120010', 'PN-260112-004', 'HH001', 1, '2026-01-12', '2026-01-30'),
+('LO202601120011', 'PN-260112-004', 'HH003', 3, '2026-01-12', '2026-01-30'),
+('LO202601120012', 'PN-260112-005', 'HH001', 1, '2026-01-12', '2026-01-29'),
+('LO202601120013', 'PN-260112-005', 'HH002', 3, '2026-01-12', '2026-01-29'),
+('LO202601120014', 'PN-260112-005', 'HH003', 2, '2026-01-12', '2026-01-29'),
+('LO202601120015', 'PN-260112-006', 'HH001', 1, '2026-01-12', '2026-01-31'),
+('LO202601120016', 'PN-260112-006', 'HH003', 3, '2026-01-12', '2026-01-31'),
+('LO202601120017', 'PN-260112-007', 'HH003', 3, '2026-01-12', '2026-01-28'),
+('LO202601120018', 'PN-260112-008', 'HH002', 4, '2026-01-12', '2026-01-29'),
+('LO202601120019', 'PN-260112-009', 'HH002', 3, '2026-01-12', '2027-12-12'),
+('LO202601120020', 'PN-260112-009', 'HH003', 2, '2026-01-12', '2027-10-12'),
+('LO202601120021', 'PN-260112-010', 'HH002', 5, '2026-01-12', '2026-01-31'),
+('LO202601120022', 'PN-260112-010', 'HH003', 3, '2026-01-12', '2026-01-31'),
+('LO202601120023', 'PN-260112-011', 'HH001', 4, '2026-01-12', '2026-01-16');
 
 -- --------------------------------------------------------
 
@@ -275,20 +396,39 @@ CREATE TABLE IF NOT EXISTS `lo_hang_vi_tri` (
   PRIMARY KEY (`maLVT`),
   KEY `fk_lvt_lo` (`maLo`),
   KEY `fk_lvt_vitri` (`maViTri`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `lo_hang_vi_tri`
 --
 
 INSERT INTO `lo_hang_vi_tri` (`maLVT`, `maLo`, `maViTri`, `soLuong`) VALUES
-(32, 'LO202601090001', 'A-1-1', 3),
-(33, 'LO202601090002', 'A-1-2', 2),
-(34, 'LO202601090002', 'A-1-3', 2),
-(35, 'LO202601090002', 'A-1-4', 1),
-(36, 'LO202601090003', 'A-1-1', 1),
-(37, 'LO202601090004', 'A-1-1', 1),
-(38, 'LO202601090005', 'A-1-4', 1);
+(47, 'LO202601120001', 'A-1-1', 1),
+(48, 'LO202601120002', 'A-1-1', 3),
+(49, 'LO202601120003', 'A-1-1', 1),
+(50, 'LO202601120003', 'A-1-2', 3),
+(51, 'LO202601120004', 'A-1-3', 1),
+(52, 'LO202601120005', 'A-1-2', 1),
+(53, 'LO202601120006', 'A-1-2', 1),
+(54, 'LO202601120006', 'A-1-3', 2),
+(55, 'LO202601120007', 'A-1-1', 1),
+(56, 'LO202601120008', 'A-1-1', 3),
+(57, 'LO202601120009', 'A-1-1', 2),
+(58, 'LO202601120010', 'A-1-1', 1),
+(59, 'LO202601120011', 'A-1-1', 3),
+(60, 'LO202601120012', 'A-1-1', 1),
+(61, 'LO202601120013', 'A-1-1', 3),
+(62, 'LO202601120014', 'A-1-1', 2),
+(63, 'LO202601120015', 'A-1-1', 1),
+(64, 'LO202601120016', 'A-1-1', 3),
+(65, 'LO202601120017', 'A-1-1', 3),
+(66, 'LO202601120018', 'A-1-1', 4),
+(67, 'LO202601120019', 'A-1-1', 3),
+(68, 'LO202601120020', 'A-1-1', 2),
+(69, 'LO202601120021', 'A-1-1', 5),
+(70, 'LO202601120022', 'A-1-1', 3),
+(71, 'LO202601120023', 'A-1-1', 3),
+(72, 'LO202601120023', 'A-1-4', 1);
 
 -- --------------------------------------------------------
 
@@ -340,6 +480,7 @@ CREATE TABLE IF NOT EXISTS `nhacungcap` (
 --
 
 INSERT INTO `nhacungcap` (`maNCC`, `tenNCC`, `diaChi`, `sdt`, `email`, `trangThai`) VALUES
+('NCC002', '1', '1', '1', '123@gmail.com', 1),
 ('NCC1', 'Cuckoo', '180 cao lỗ p. chánh hưng tp.hcm', '123', 'Cuckoo@group.com', 1);
 
 -- --------------------------------------------------------
@@ -382,6 +523,17 @@ CREATE TABLE IF NOT EXISTS `phieudathang` (
   KEY `fk_pdh_nd` (`maND`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Đang đổ dữ liệu cho bảng `phieudathang`
+--
+
+INSERT INTO `phieudathang` (`maDH`, `ngayDatHang`, `maNCC`, `trangThai`, `maND`) VALUES
+('PD1768186155', '2026-01-12 02:49:15', 'NCC1', 2, 'ND01'),
+('PD1768193548', '2026-01-12 04:52:28', 'NCC002', 0, 'ND01'),
+('PD1768194143', '2026-01-12 05:02:23', 'NCC002', 2, 'ND01'),
+('PD1768194229', '2026-01-12 05:03:49', 'NCC1', 2, 'ND01'),
+('PD1768200131', '2026-01-12 06:42:11', 'NCC1', 2, 'ND01');
+
 -- --------------------------------------------------------
 
 --
@@ -421,10 +573,17 @@ CREATE TABLE IF NOT EXISTS `phieunhap` (
 --
 
 INSERT INTO `phieunhap` (`maPN`, `ngayNhap`, `maNCC`, `ghiChu`, `maND`) VALUES
-('PN-260109-001', '2026-01-09 12:34:30', 'NCC1', '', 'ND01'),
-('PN1767935891', '2026-01-09 12:18:11', 'NCC1', '', 'ND01'),
-('PN1767936297', '2026-01-09 12:24:57', 'NCC1', '', 'ND01'),
-('PN1767936519', '2026-01-09 12:28:39', 'NCC1', '', 'ND01');
+('PN-260112-001', '2026-01-12 10:41:15', 'NCC1', '', 'ND01'),
+('PN-260112-002', '2026-01-12 11:08:25', 'NCC1', '', 'ND01'),
+('PN-260112-003', '2026-01-12 11:24:31', 'NCC1', '', 'ND01'),
+('PN-260112-004', '2026-01-12 11:27:31', 'NCC1', '', 'ND01'),
+('PN-260112-005', '2026-01-12 11:59:23', 'NCC1', '', 'ND01'),
+('PN-260112-006', '2026-01-12 12:00:55', 'NCC1', 'nhập bổ sung', 'ND01'),
+('PN-260112-007', '2026-01-12 12:03:06', 'NCC002', '', 'ND01'),
+('PN-260112-008', '2026-01-12 12:08:14', 'NCC1', '', 'ND01'),
+('PN-260112-009', '2026-01-12 13:46:09', 'NCC1', 'nhập đợt 1', 'ND01'),
+('PN-260112-010', '2026-01-12 13:47:19', 'NCC1', 'nhập bổ sung', 'ND01'),
+('PN-260112-011', '2026-01-12 13:48:20', 'NCC1', '', 'ND01');
 
 -- --------------------------------------------------------
 
@@ -442,20 +601,6 @@ CREATE TABLE IF NOT EXISTS `phieuxuat` (
   PRIMARY KEY (`maPX`),
   KEY `fk_px_kh` (`maKH`),
   KEY `fk_px_nd` (`maNDXuat`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
-
---
--- Cấu trúc bảng cho bảng `phieuxuat_serial`
---
-
-DROP TABLE IF EXISTS `phieuxuat_serial`;
-CREATE TABLE IF NOT EXISTS `phieuxuat_serial` (
-  `maPX` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `serial` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`maPX`,`serial`),
-  KEY `fk_pxs_serial` (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -557,7 +702,7 @@ CREATE TABLE IF NOT EXISTS `vitri` (
 --
 
 INSERT INTO `vitri` (`maViTri`, `day`, `ke`, `o`, `trangThai`, `sucChuaToiDa`) VALUES
-('A-1-1', 'A', '1', '1', 'DAY', 100),
+('A-1-1', 'A', '1', '1', 'TRONG', 1000),
 ('A-1-2', 'A', '1', '2', 'TRONG', 100),
 ('A-1-3', 'A', '1', '3', 'TRONG', 100),
 ('A-1-4', 'A', '1', '4', 'TRONG', 100),
@@ -600,8 +745,7 @@ ALTER TABLE `ct_phieuxuat`
 --
 ALTER TABLE `hanghoa`
   ADD CONSTRAINT `fk_hanghoa_danhmuc` FOREIGN KEY (`maDanhMuc`) REFERENCES `danhmuc` (`maDanhMuc`),
-  ADD CONSTRAINT `fk_hanghoa_dvt` FOREIGN KEY (`maDVT`) REFERENCES `donvitinh` (`maDVT`),
-  ADD CONSTRAINT `fk_hanghoa_ncc` FOREIGN KEY (`maNCC`) REFERENCES `nhacungcap` (`maNCC`);
+  ADD CONSTRAINT `fk_hanghoa_dvt` FOREIGN KEY (`maDVT`) REFERENCES `donvitinh` (`maDVT`);
 
 --
 -- Các ràng buộc cho bảng `hanghoa_serial`
@@ -663,13 +807,6 @@ ALTER TABLE `phieunhap`
 ALTER TABLE `phieuxuat`
   ADD CONSTRAINT `fk_px_kh` FOREIGN KEY (`maKH`) REFERENCES `khachhang` (`maKH`),
   ADD CONSTRAINT `fk_px_nd` FOREIGN KEY (`maNDXuat`) REFERENCES `nguoidung` (`maND`);
-
---
--- Các ràng buộc cho bảng `phieuxuat_serial`
---
-ALTER TABLE `phieuxuat_serial`
-  ADD CONSTRAINT `fk_pxs_px` FOREIGN KEY (`maPX`) REFERENCES `phieuxuat` (`maPX`),
-  ADD CONSTRAINT `fk_pxs_serial` FOREIGN KEY (`serial`) REFERENCES `hanghoa_serial` (`serial`);
 
 --
 -- Các ràng buộc cho bảng `quyen_vaitro`

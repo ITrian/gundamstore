@@ -21,15 +21,18 @@ class ExportController extends Controller {
     
     // Giữ nguyên hàm create của bạn
     public function create() {
-        $partnerModel = $this->model('PartnerModel');
+        // Lấy danh sách sản phẩm kèm tồn kho để hiển thị trong form xuất
         $productModel = $this->model('ProductModel');
-        $vitriModel = $this->model('VitriModel');
+        $products = $productModel->getAll();
+
+        // Lấy danh sách khách hàng đang hoạt động
+        $partnerModel = $this->model('PartnerModel');
+        $customers = $partnerModel->getCustomers();
 
         $data = [
             'title' => 'Tạo phiếu xuất kho',
-            'customers' => $partnerModel->getCustomers(),
-            'products' => $productModel->getAll(),
-            'vitri' => $vitriModel->getAll()
+            'products' => $products,
+            'customers' => $customers
         ];
         $this->view('export/create', $data);
     }

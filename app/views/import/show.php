@@ -50,8 +50,8 @@
                             $totalAmount += intval($ln['soLuong']) * floatval($ln['donGia']);
                         }
                     ?>
-                    <div class="small text-muted">Tổng</div>
-                    <div class="fw-bold"><?php echo $totalItems; ?> cái — <?php echo number_format($totalAmount, 0, ',', '.'); ?> đ</div>
+                    <div class="small text-muted">Tổng giá trị nhập</div>
+                    <div class="fw-bold"><?php echo number_format($totalAmount, 0, ',', '.'); ?> đ</div>
                 </div>
             </div>
         </div>

@@ -1,13 +1,5 @@
 <?php
 class PartnerModel {
-    // Lấy số thứ tự lớn nhất của mã NCC/KH hiện tại
-    public function getMaxCode($table, $col, $prefix) {
-        $sql = "SELECT MAX(CAST(SUBSTRING($col, LENGTH('$prefix')+1) AS UNSIGNED)) as max_code FROM $table";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute();
-        $row = $stmt->fetch();
-        return $row && $row['max_code'] ? (int)$row['max_code'] : 0;
-    }
     private $conn;
 
     public function __construct() {

@@ -8,6 +8,8 @@
     <h1 class="h3 mb-4 text-gray-800">Tạo Phiếu Xuất Kho Mới</h1>
     <form action="<?php echo BASE_URL; ?>/export/store" method="POST" id="exportForm">
 
+        <div class="alert alert-danger d-none" id="exportFormError"></div>
+
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Thông tin Khách Hàng</h6>
@@ -60,11 +62,11 @@
                     <table class="table table-bordered align-middle" id="productTable" width="100%" cellspacing="0">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 30%">Sản phẩm</th>
-                                <th style="width: 14%">Số lượng</th>
+                                <th style="width: 28%">Sản phẩm</th>
+                                <th style="width: 10%">Số lượng</th>
                                 <th style="width: 15%">Đơn giá xuất</th>
-                                <th style="width: 14%">Vị trí xuất</th>
-                                <th style="width: 12%">Thành tiền</th>
+                                <th style="width: 15%">Serial</th>
+                                <th style="width: 10%">Thành tiền</th>
                                 <th style="width: 7%">Xóa</th>
                             </tr>
                         </thead>
@@ -73,26 +75,28 @@
                                 <td>
                                     <select name="product_id[]" class="form-select form-select-sm product-select" required style="width: 100%;">
                                         <option value="">-- Chọn hàng --</option>
-                                        <?php foreach ($data['products'] as $p): ?>
-                                            <option value="<?php echo $p['maHH']; ?>" data-price="<?php echo $p['donGiaBan'] ?? 0; ?>">
-                                                <?php echo htmlspecialchars($p['tenHH']); ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </td>
-                                <td><input type="number" name="quantity[]" class="form-control form-control-sm qty-input text-center" min="1" value="1" required></td>
-                                <td><input type="number" name="price[]" class="form-control form-control-sm price-input text-end" min="0" value="0" required></td>
-                                <td>
-                                    <select name="vitri[]" class="form-select form-select-sm" required>
-                                        <option value="">-- Chọn --</option>
-                                        <?php if (!empty($data['vitri'])): ?>
-                                            <?php foreach ($data['vitri'] as $vt): ?>
-                                                <option value="<?php echo $vt['maViTri']; ?>">
-                                                    <?php echo $vt['maViTri']; ?>
+                                        <?php if (!empty($data['products'])): ?>
+                                            <?php foreach ($data['products'] as $p): ?>
+                                                <?php $ton = isset($p['tongTon']) ? (int)$p['tongTon'] : 0; ?>
+                                                <option value="<?php echo $p['maHH']; ?>"
+                                                        data-price="<?php echo $p['donGiaBan'] ?? 0; ?>"
+                                                        data-cost="<?php echo $p['donGiaNhap'] ?? ($p['donGiaBan'] ?? 0); ?>"
+                                                        data-loai="<?php echo $p['loaiHang'] ?? 'LO'; ?>"
+                                                        data-ton="<?php echo $ton; ?>">
+                                                    <?php echo htmlspecialchars($p['tenHH']); ?> (<?php echo $ton; ?>)
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
                                     </select>
+                                </td>
+                                <td><input type="number" name="quantity[]" class="form-control form-control-sm qty-input text-center" min="1" value="1" required></td>
+                                <td><input type="number" name="price[]" class="form-control form-control-sm price-input text-end" min="0" value="" required></td>
+                                <td>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <button type="button" class="btn btn-sm btn-outline-primary open-serial-modal" title="Chọn serial" style="display:none;">Serial</button>
+                                    </div>
+                                    <input type="hidden" name="serials[]" class="serials-hidden" value="">
+                                    <div class="small text-muted serial-summary mt-1"></div>
                                 </td>
                                 <td><input type="text" class="form-control form-control-sm subtotal text-end fw-bold" value="0" readonly></td>
                                 <td class="text-center"><button type="button" class="btn btn-danger btn-sm removeRow"><i class="bi bi-trash"></i>X</button></td>
@@ -151,6 +155,26 @@
     </div>
 </div>
 
+<!-- Modal: Serial selection -->
+<div class="modal fade" id="serialModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Chọn Serial</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="serialModalBody">Đang tải serial...</div>
+                <div class="alert alert-danger d-none" id="serialModalError"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="serialModalSave">Lưu serial</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -158,7 +182,7 @@
 <script>
     $(document).ready(function() {
 
-        // --- PHẦN 1: KÍCH HOẠT Ô TÌM KIẾM KHÁCH HÀNG ---
+    // --- PHẦN 1: KÍCH HOẠT Ô TÌM KIẾM KHÁCH HÀNG ---
         $('#customer').select2({
             theme: 'bootstrap-5', // Dùng giao diện Bootstrap 5 cho đẹp
             placeholder: '-- Tìm SĐT hoặc tên khách --',
@@ -174,6 +198,137 @@
             var address = selectedData.data('address') || '';
             $('#customerAddress').val(address);
         });
+
+        // --- PHẦN 1B: KHÔNG CHO CHỌN TRÙNG SẢN PHẨM TRONG CÁC DÒNG ---
+        function refreshExportProductOptions() {
+            var rows = $('#productTable tbody tr');
+
+            // Thu thập các mã hàng đã chọn
+            var selectedValues = [];
+            rows.each(function() {
+                var val = $(this).find('select.product-select').val();
+                if (val) selectedValues.push(val);
+            });
+
+            // Với mỗi select, ẩn các option đã được chọn ở dòng khác
+            rows.each(function() {
+                var $row = $(this);
+                var $sel = $row.find('select.product-select');
+                if (!$sel.length) return;
+
+                var currentValue = $sel.val();
+
+                $sel.find('option').each(function() {
+                    var optVal = $(this).attr('value') || '';
+                    if (!optVal) { // option rỗng '-- Chọn hàng --'
+                        $(this).prop('hidden', false);
+                        return;
+                    }
+
+                    if (optVal !== currentValue && selectedValues.indexOf(optVal) !== -1) {
+                        $(this).prop('hidden', true);
+                    } else {
+                        $(this).prop('hidden', false);
+                    }
+                });
+            });
+        }
+
+    // Khi chọn sản phẩm: nếu là SERIAL thì chỉ hiện nút Serial, KHÔNG mở modal ngay
+        $(document).on('change', '.product-select', function() {
+            var row = $(this).closest('tr');
+            var loai = $(this).find('option:selected').data('loai');
+            if (loai && loai.toString().toUpperCase() === 'SERIAL') {
+                row.find('.open-serial-modal').show();
+            } else {
+                row.find('.open-serial-modal').hide();
+                row.find('.serials-hidden').val('');
+                row.find('.serial-summary').text('');
+            }
+
+            // Cập nhật lại danh sách sản phẩm giữa các dòng để tránh chọn trùng
+            refreshExportProductOptions();
+        });
+
+    // Khi người dùng nhập xong số lượng và nhấn Enter, nếu là hàng SERIAL thì tự mở modal serial
+        $(document).on('keydown', '.qty-input', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                var row = $(this).closest('tr');
+                var loai = row.find('.product-select option:selected').data('loai');
+                if (loai && loai.toString().toUpperCase() === 'SERIAL') {
+                    row.find('.open-serial-modal').trigger('click');
+                }
+            }
+        });
+
+        // Serial modal open when clicking a button
+        $(document).on('click', '.open-serial-modal', function() {
+            var row = $(this).closest('tr');
+            var maHH = row.find('.product-select').val();
+            if (!maHH) { alert('Chọn sản phẩm trước'); return; }
+            $('#serialModalBody').html('Đang tải serial...');
+            $('#serialModalError').addClass('d-none');
+            var modal = new bootstrap.Modal(document.getElementById('serialModal'));
+            modal.show();
+            $('#serialModal').data('row', row).data('maHH', maHH);
+            // Lấy danh sách serial đã chọn trước đó từ hidden để pre-check
+            var previouslySelected = [];
+            var hiddenVal = row.find('.serials-hidden').val();
+            if (hiddenVal) {
+                try {
+                    previouslySelected = JSON.parse(hiddenVal);
+                } catch (e) {
+                    previouslySelected = [];
+                }
+            }
+
+            // Lấy số lượng mong muốn từ ô quantity để auto-chọn theo FIFO
+            var desiredQty = parseInt(row.find('.qty-input').val(), 10) || 0;
+            $.ajax({
+                url: '<?php echo BASE_URL; ?>/product/serials',
+                data: { maHH: maHH },
+                dataType: 'json',
+                success: function(res) {
+                    if (!res.success) { $('#serialModalBody').html('<div class="text-danger">Lỗi tải serial</div>'); return; }
+                    if (!res.serials || !res.serials.length) { $('#serialModalBody').html('<div>Không có serial khả dụng</div>'); return; }
+                    var html = '<div class="row">';
+                    res.serials.forEach(function(s, idx) {
+                        // Nếu đã có lựa chọn trước đó thì ưu tiên giữ nguyên
+                        var isPreviouslySelected = previouslySelected.indexOf(s.serial) !== -1;
+                        var checked = '';
+                        if (isPreviouslySelected) {
+                            checked = ' checked';
+                        } else if (!previouslySelected.length && desiredQty > 0 && idx < desiredQty) {
+                            // Nếu chưa có lựa chọn cũ, tự động chọn theo FIFO đúng bằng số lượng mong muốn
+                            checked = ' checked';
+                        }
+
+                        html += '<div class="col-md-4"><label class="form-check">'
+                             + '<input class="form-check-input serial-check" type="checkbox" value="' + s.serial + '" data-malo="' + (s.maLo||'') + '"' + checked + '>'
+                             + ' <span class="form-check-label">' + s.serial + (s.maLo?(' ('+s.maLo+')'):'') + '</span></label></div>';
+                    });
+                    html += '</div>';
+                    $('#serialModalBody').html(html);
+                }, error: function(){ $('#serialModalBody').html('<div class="text-danger">Lỗi</div>'); }
+            });
+        });
+
+        // Save selected serials
+        $(document).on('click', '#serialModalSave', function() {
+            var modal = $('#serialModal');
+            var row = modal.data('row');
+            var selected = [];
+            $('#serialModalBody').find('.serial-check:checked').each(function(){ selected.push($(this).val()); });
+            if (!selected.length) { alert('Chọn ít nhất 1 serial'); return; }
+            row.find('.serials-hidden').val(JSON.stringify(selected));
+            row.find('.serial-summary').text('Đã chọn ' + selected.length + ' serial');
+            row.find('.qty-input').val(selected.length);
+            var modalInstance = bootstrap.Modal.getInstance(document.getElementById('serialModal'));
+            modalInstance.hide();
+        });
+
+
 
         // --- PHẦN 2: XỬ LÝ THÊM KHÁCH MỚI (AJAX) ---
         $('#quickAddCustomerForm').on('submit', function(e) {
@@ -201,9 +356,16 @@
                         }
                         // Thêm vào Select và chọn luôn
                         $('#customer').append(newOption).trigger('change');
-                        // Đóng modal đúng chuẩn Bootstrap 5
-                        var modal = bootstrap.Modal.getInstance(document.getElementById('addCustomerModal'));
-                        if (modal) modal.hide();
+                        // Đóng modal đúng chuẩn Bootstrap 5 (sử dụng getOrCreateInstance để an toàn)
+                        var modalEl = document.getElementById('addCustomerModal');
+                        var modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modalInstance.hide();
+                        // Thêm bước dọn dẹp phòng hờ backdrop bị kẹt
+                        setTimeout(function() {
+                            $('.modal-backdrop').remove();
+                            $('body').removeClass('modal-open');
+                            $('body').css('padding-right', '');
+                        }, 200);
                         $('#quickAddCustomerForm')[0].reset();
                     } else {
                         $('#modalErrorMsg').text('Lỗi: ' + res.message).removeClass('d-none');
@@ -220,26 +382,145 @@
         });
 
         // --- PHẦN 3: CÁC LOGIC KHÁC ---
+        function showExportError(msg) {
+            $('#exportFormError').text(msg).removeClass('d-none');
+            // scroll to top of form so user sees it
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearExportError() {
+            $('#exportFormError').addClass('d-none').text('');
+        }
+
+        function validateSerialBeforeSubmit() {
+            clearExportError();
+            var ok = true;
+            var firstMessage = '';
+
+            // Kiểm tra vượt tồn cho tất cả các dòng (áp dụng cho cả hàng SERIAL và thường)
+            $('#productTable tbody tr').each(function() {
+                var row = $(this);
+                var $select = row.find('.product-select');
+                var productId = $select.val();
+                if (!productId) {
+                    return; // bỏ qua dòng chưa chọn sản phẩm
+                }
+
+                var selectedOpt = $select.find('option:selected');
+                var ton = parseInt(selectedOpt.data('ton')) || 0;
+                var qty = parseInt(row.find('.qty-input').val(), 10) || 0;
+
+                if (qty > ton) {
+                    ok = false;
+                    var ten = selectedOpt.text() || 'sản phẩm';
+                    firstMessage = 'Số lượng xuất của ' + ten + ' vượt quá tồn kho hiện có (' + ton + ').';
+                    row.find('.qty-input').focus();
+                    return false; // thoát each
+                }
+            });
+
+            if (!ok) {
+                showExportError(firstMessage);
+                return false;
+            }
+
+            $('#productTable tbody tr').each(function() {
+                var row = $(this);
+                var loai = (row.find('.product-select option:selected').data('loai') || '').toString().toUpperCase();
+                if (loai !== 'SERIAL') return;
+
+                var qty = parseInt(row.find('.qty-input').val(), 10) || 0;
+                var serialJson = row.find('.serials-hidden').val();
+                var serials = [];
+                try { serials = serialJson ? JSON.parse(serialJson) : []; } catch(e) { serials = []; }
+
+                if (qty <= 0) {
+                    ok = false;
+                    firstMessage = 'Sản phẩm SERIAL phải có số lượng > 0.';
+                    row.find('.qty-input').focus();
+                    return false;
+                }
+
+                if (!serials.length) {
+                    ok = false;
+                    firstMessage = 'Bạn chưa chọn serial cho sản phẩm SERIAL.';
+                    row.find('.open-serial-modal').focus();
+                    return false;
+                }
+
+                if (serials.length !== qty) {
+                    ok = false;
+                    firstMessage = 'Số lượng SERIAL đã chọn (' + serials.length + ') phải bằng số lượng (' + qty + '). Vui lòng chọn lại serial.';
+                    row.find('.open-serial-modal').focus();
+                    return false;
+                }
+            });
+
+            if (!ok) {
+                showExportError(firstMessage);
+            }
+            return ok;
+        }
+
+        // Block submit if serial selection doesn't match quantity
+        $('#exportForm').on('submit', function(e) {
+            if (!validateSerialBeforeSubmit()) {
+                e.preventDefault();
+            }
+        });
+
+        function updateGrandTotal() {
+            var total = 0;
+            $('#productTable tbody tr').each(function() {
+                var qty = parseFloat($(this).find('.qty-input').val()) || 0;
+                var price = parseFloat($(this).find('.price-input').val()) || 0;
+                total += qty * price;
+            });
+            $('#grandTotal').text(new Intl.NumberFormat('vi-VN').format(total) + ' đ');
+        }
+
         $(document).on('input', '.qty-input, .price-input', function() {
             var row = $(this).closest('tr');
             var qty = parseFloat(row.find('.qty-input').val()) || 0;
             var price = parseFloat(row.find('.price-input').val()) || 0;
             row.find('.subtotal').val(new Intl.NumberFormat('vi-VN').format(qty * price));
+            updateGrandTotal();
+        });
+
+        // If user changes qty on SERIAL row, force them to reselect serials
+        $(document).on('input', '.qty-input', function() {
+            var row = $(this).closest('tr');
+            var loai = (row.find('.product-select option:selected').data('loai') || '').toString().toUpperCase();
+            if (loai !== 'SERIAL') return;
+            row.find('.serials-hidden').val('');
+            row.find('.serial-summary').text('');
         });
 
         $(document).on('click', '.removeRow', function() {
             $(this).closest('tr').remove();
+            updateGrandTotal();
+            refreshExportProductOptions();
         });
 
         // Nút thêm dòng
         $('#addRow').click(function() {
             var newRow = $('#productTable tbody tr:first').clone();
-            newRow.find('input').val('');
+            // reset selects và inputs
+            newRow.find('select').each(function(){ this.selectedIndex = 0; });
             newRow.find('.qty-input').val(1);
-            newRow.find('.price-input').val(0);
+            newRow.find('.price-input').val('');
             newRow.find('.subtotal').val(0);
+            newRow.find('.serials-hidden').val('');
+            newRow.find('.serial-summary').text('');
+            newRow.find('.open-serial-modal').hide();
             $('#productTable tbody').append(newRow);
+            updateGrandTotal();
+            refreshExportProductOptions();
         });
+
+    // initial total và làm sạch danh sách option
+    updateGrandTotal();
+    refreshExportProductOptions();
     });
 </script>
 
