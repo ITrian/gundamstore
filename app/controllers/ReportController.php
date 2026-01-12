@@ -4,6 +4,8 @@ class ReportController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Cần quyền báo cáo
+        $this->requirePermission('Q_BAOCAO');
         $this->reportModel = $this->model('ReportModel');
     }
 

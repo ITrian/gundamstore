@@ -4,6 +4,8 @@ class PartnerController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Chỉ Quản lý hàng (hoặc Admin) mới được quản lý đối tác
+        $this->requirePermission('Q_QL_HANG');
         $this->partnerModel = $this->model('PartnerModel');
     }
 

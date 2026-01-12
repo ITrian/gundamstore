@@ -12,14 +12,14 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered">
+                <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Mã PX</th>
                             <th>Ngày Xuất</th>
                             <th>Khách Hàng</th>
                             <th>Nhân viên thực hiện</th>
-                            <th>Tổng Giá Trị Xuất</th>
+                            <th class="text-end">Tổng Giá Trị Xuất</th>
                             <th>Thao tác</th>
                         </tr>
                     </thead>
@@ -28,7 +28,7 @@
                             <?php foreach ($data['orders'] as $item): ?>
                             <tr>
                                 <!-- 1. Mã PX -->
-                                <td><strong><?php echo htmlspecialchars($item['maPX']); ?></strong></td>
+                                <td class="fw-bold text-primary"><?php echo htmlspecialchars($item['maPX']); ?></td>
 
                                 <!-- 2. Ngày Xuất -->
                                 <td><?php echo date('d/m/Y H:i', strtotime($item['ngayXuat'])); ?></td>
@@ -40,18 +40,22 @@
                                 <td><?php echo htmlspecialchars($item['nguoiTao']); ?></td>
 
                                 <!-- 5. Tổng Giá Trị Xuất -->
-                                <td class="text-end fw-bold text-primary">
+                                <td class="text-end fw-bold text-success">
                                     <?php echo number_format($item['tongTien']); ?> đ
                                 </td>
 
                                 <!-- 6. Thao tác -->
                                 <td>
-                                    <a href="<?php echo BASE_URL; ?>/export/show/<?php echo urlencode($item['maPX']); ?>" class="btn btn-sm btn-info text-white mt-1">Chi tiết</a>
+                                    <a href="<?php echo BASE_URL; ?>/export/show/<?php echo urlencode($item['maPX']); ?>" class="btn btn-sm btn-outline-info">Chi tiết</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
-                            <tr><td colspan="6" class="text-center">Chưa có phiếu xuất nào.</td></tr>
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    Chưa có phiếu xuất nào.
+                                </td>
+                            </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

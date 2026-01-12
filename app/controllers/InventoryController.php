@@ -9,6 +9,9 @@ class InventoryController extends Controller {
     }
 
     public function index() {
+        if (!checkPermission('Q_XEM_HANG') && !checkPermission('Q_QL_HANG')) {
+            $this->requirePermission('Q_XEM_HANG');
+        }
         // Lấy dữ liệu thật từ DB
         $stocks = $this->inventoryModel->getAllStock();
 

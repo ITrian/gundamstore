@@ -62,6 +62,11 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Thời gian Bảo hành (tháng)</label>
+                            <input type="number" name="thoiGianBaoHanh" class="form-control" value="12" min="0" step="1">
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label font-weight-bold">Đơn Vị Tính (*)</label>

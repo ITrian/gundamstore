@@ -25,7 +25,7 @@
                     <table class="table table-bordered">
                         <tr>
                             <th width="30%" class="bg-light">Sản phẩm</th>
-                            <td class="fs-5 fw-bold"><?php echo $data['ticket']['tenSP']; ?></td>
+                            <td class="fs-5 fw-bold"><?php echo $data['ticket']['tenHH'] ?? 'N/A'; ?></td>
                         </tr>
                         <tr>
                             <th class="bg-light">Số Serial / Mã Lô</th>

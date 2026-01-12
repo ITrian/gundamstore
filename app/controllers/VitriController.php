@@ -8,17 +8,22 @@ class VitriController extends Controller {
     }
 
     public function index() {
+        if (!checkPermission('Q_XEM_HANG') && !checkPermission('Q_QL_HANG')) {
+            $this->requirePermission('Q_XEM_HANG');
+        }
         $rows = $this->vitriModel->getAll();
         $data = ['title' => 'Quản lý Vị trí', 'rows' => $rows];
         $this->view('vitri/index', $data);
     }
 
     public function create() {
+        $this->requirePermission('Q_QL_HANG');
         $data = ['title' => 'Thêm Vị trí mới'];
         $this->view('vitri/create', $data);
     }
 
     public function store() {
+        $this->requirePermission('Q_QL_HANG');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $day = trim($_POST['day']);
             $ke = trim($_POST['ke']);
@@ -43,6 +48,7 @@ class VitriController extends Controller {
     }
 
     public function edit($id) {
+        $this->requirePermission('Q_QL_HANG');
         $row = $this->vitriModel->find($id);
         if (!$row) die('Không tìm thấy vị trí');
         $data = ['title' => 'Sửa Vị trí', 'row' => $row];
@@ -50,6 +56,7 @@ class VitriController extends Controller {
     }
 
     public function update() {
+        $this->requirePermission('Q_QL_HANG');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['maViTri'];
             $data = [
@@ -68,6 +75,7 @@ class VitriController extends Controller {
     }
 
     public function delete($id) {
+        $this->requirePermission('Q_QL_HANG');
         if ($this->vitriModel->delete($id)) {
             header('Location: ' . BASE_URL . '/vitri');
         } else {

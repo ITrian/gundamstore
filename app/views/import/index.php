@@ -12,7 +12,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-bordered align-middle">
+                <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Mã Phiếu</th>
@@ -35,13 +35,13 @@
                                 <td><?php echo $item['tenND']; ?></td>
                                 <td><?php echo $item['ghiChu']; ?></td>
                                 <td>
-                                    <a href="<?php echo BASE_URL; ?>/import/show/<?php echo urlencode($item['maPN']); ?>" class="btn btn-sm btn-info text-white">Chi tiết</a>
+                                    <a href="<?php echo BASE_URL; ?>/import/show/<?php echo urlencode($item['maPN']); ?>" class="btn btn-sm btn-outline-info">Chi tiết</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-3">
+                                <td colspan="6" class="text-center text-muted py-4">
                                     Chưa có phiếu nhập nào.
                                 </td>
                             </tr>

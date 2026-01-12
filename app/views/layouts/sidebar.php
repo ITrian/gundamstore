@@ -14,8 +14,8 @@
                 </a>
             </li>
 
-            <!-- Đối tác: chỉ ai có quyền hệ thống hoặc nhập xuất -->
-            <?php if (checkPermission('Q_HETHONG') || checkPermission('Q_NHAP_KHO') || checkPermission('Q_XUAT_KHO')): ?>
+            <!-- Đối tác: chỉ Quản lý hàng hoặc Admin mới được quản lý đối tác -->
+            <?php if (checkPermission('Q_HETHONG') || checkPermission('Q_QL_HANG')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/partner/supplier">
                     <i class="fas fa-users me-2"></i> Đối tác
@@ -30,22 +30,27 @@
                     <i class="fas fa-box me-2"></i> Sản phẩm
                 </a>
             </li>
-
+            
+            <?php if (checkPermission('Q_QL_HANG')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/category">
                     <i class="fas fa-tags me-2"></i> Danh mục
                 </a>
             </li>
             <?php endif; ?>
+            <?php endif; ?>
 
-            <!-- Đặt hàng & Nhập kho: check quyền Nhập kho -->
-            <?php if (checkPermission('Q_NHAP_KHO')): ?>
+            <!-- Đặt hàng: chỉ dành cho Quản lý (người quyết định mua) -->
+            <?php if (checkPermission('Q_QL_HANG')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/phieudathang">
                     <i class="fas fa-shopping-cart me-2"></i> Đặt hàng
                 </a>
             </li>
+            <?php endif; ?>
 
+            <!-- Nhập kho: check quyền Nhập kho (Kho & Admin) -->
+            <?php if (checkPermission('Q_NHAP_KHO')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/import">
                     <i class="fas fa-download me-2"></i> Nhập kho
@@ -77,8 +82,8 @@
             </li>
             <?php endif; ?>
 
-            <!-- Bảo hành: check quyền Xuất hoặc Nhập (thường liên quan hậu mãi) hoặc Q_XEM_HANG -->
-            <?php if (checkPermission('Q_XEM_HANG') || checkPermission('Q_NHAP_KHO') || checkPermission('Q_XUAT_KHO')): ?>
+            <!-- Bảo hành: check quyền Q_BAOHANH -->
+            <?php if (checkPermission('Q_BAOHANH')): ?>
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/warranty">
                     <i class="fas fa-shield-alt me-2"></i> Bảo hành
@@ -91,6 +96,15 @@
             <li class="nav-item mb-2">
                 <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/report">
                     <i class="fas fa-chart-bar me-2"></i> Báo cáo
+                </a>
+            </li>
+            <?php endif; ?>
+
+            <!-- Tài khoản: check quyền Q_HETHONG (Admin) -->
+            <?php if (checkPermission('Q_HETHONG')): ?>
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="<?php echo BASE_URL; ?>/user">
+                    <i class="fas fa-user-shield me-2"></i> Tài khoản
                 </a>
             </li>
             <?php endif; ?>

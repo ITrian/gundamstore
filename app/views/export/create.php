@@ -1,9 +1,6 @@
 <?php require_once APP_ROOT . '/views/layouts/header.php'; ?>
 <?php require_once APP_ROOT . '/views/layouts/sidebar.php'; ?>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
 <div class="container-fluid">
     <h1 class="h3 mb-4 text-gray-800">Tạo Phiếu Xuất Kho Mới</h1>
     <form action="<?php echo BASE_URL; ?>/export/store" method="POST" id="exportForm">
@@ -172,24 +169,26 @@
     </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>
 
 <script>
     $(document).ready(function() {
-
-        // --- PHẦN 1: KÍCH HOẠT Ô TÌM KIẾM KHÁCH HÀNG ---
+        // Init Select2 form Customer
         $('#customer').select2({
-            theme: 'bootstrap-5', // Dùng giao diện Bootstrap 5 cho đẹp
-            placeholder: '-- Tìm SĐT hoặc tên khách --',
-            allowClear: true,
-            width: '100%',
-            minimumResultsForSearch: 0, // BẮT BUỘC hiện ô tìm kiếm dù ít dữ liệu
-            dropdownParent: $('body')
+             theme: 'bootstrap-5',
+             placeholder: '-- Tìm SĐT hoặc tên khách --',
+             allowClear: true,
+             width: '100%',
+             dropdownParent: $('body')
+        });
+
+        // Init Select2 for Products
+        $('.product-select').each(function() {
+            initProductSelect2($(this));
         });
 
         // Tự động điền địa chỉ khi chọn
+
         $('#customer').on('change', function() {
             var selectedData = $(this).find(':selected');
             var address = selectedData.data('address') || '';
@@ -449,19 +448,49 @@
 
         // Nút thêm dòng
         $('#addRow').click(function() {
-            var newRow = $('#productTable tbody tr:first').clone();
-            // reset selects and inputs
-            newRow.find('select').each(function(){ this.selectedIndex = 0; });
+            var tableBody = $('#productTable tbody');
+            var firstRow = tableBody.find('tr:first');
+            var newRow = firstRow.clone(true); // Clone with events/data? No, clean it.
+            
+            // Clean Select2 artifacts
+            newRow.find('.select2-container').remove();
+            var sel = newRow.find('select.product-select');
+            sel.removeClass('select2-hidden-accessible');
+            sel.removeAttr('data-select2-id');
+            sel.find('option').removeAttr('data-select2-id');
+            sel.val('');
+
+
+            // reset inputs
             newRow.find('.qty-input').val(1);
             newRow.find('.price-input').val('');
             newRow.find('.subtotal').val(0);
             newRow.find('.serials-hidden').val('');
             newRow.find('.serial-summary').text('');
             newRow.find('.open-serial-modal').hide();
-            $('#productTable tbody').append(newRow);
+            
+            tableBody.append(newRow);
+
+            // Re-init Select2
+            initProductSelect2(sel);
+
             updateGrandTotal();
             refreshExportProductOptions();
         });
+
+        function initProductSelect2(element) {
+            element.select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Chọn hàng --',
+                allowClear: true,
+                dropdownParent: element.parent()
+            }).on('select2:select', function (e) {
+                 $(this).trigger('change');
+            }).on('select2:unselect', function (e) {
+                 $(this).trigger('change');
+            });
+        }
+
 
         // initial total
         updateGrandTotal();
@@ -477,8 +506,9 @@
             });
 
             $(tbody).find('select.product-select').each(function() {
-                var current = $(this).val();
-                $(this).find('option').each(function() {
+                var currentSelect = $(this);
+                var current = currentSelect.val();
+                currentSelect.find('option').each(function() {
                     var v = $(this).attr('value');
                     if (!v) return; // placeholder
                     if (v !== current && selectedValues.indexOf(v) !== -1) {
@@ -487,6 +517,11 @@
                         $(this).prop('disabled', false);
                     }
                 });
+                
+                // Select2 does not automatically refresh disabled options visualization unless triggered or re-inited
+                // Use a trick or just let the validation catch it? 
+                // Select2 respects 'disabled' property if re-rendered? 
+                // We can trigger 'change.select2' 
             });
         }
 
@@ -494,5 +529,3 @@
         refreshExportProductOptions();
     });
 </script>
-
-<?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>

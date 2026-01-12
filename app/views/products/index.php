@@ -20,6 +20,7 @@
                             <th>Danh mục</th>
                             <th>ĐVT</th>
                             <th class="text-center">Tồn kho</th>
+                            <th class="text-center">Hạn bảo hành</th>
                             <th class="text-center">Hệ số chiếm chỗ</th>
                             <th>Thao tác</th>
                         </tr>
@@ -46,6 +47,9 @@
                                             <?php echo number_format($item['tongTon']); ?>
                                         </span>
                                     <?php endif; ?>
+                                </td>
+                                <td class="text-center">
+                                    <?php echo isset($item['thoiGianBaoHanh']) ? $item['thoiGianBaoHanh'] . ' tháng' : '-'; ?>
                                 </td>
                                 <td class="text-center">
                                     <?php echo isset($item['heSoChiemCho']) ? $item['heSoChiemCho'] : '-'; ?>

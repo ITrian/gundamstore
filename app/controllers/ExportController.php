@@ -4,6 +4,8 @@ class ExportController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Cần quyền xuất kho
+        $this->requirePermission('Q_XUAT_KHO');
         $this->exportModel = $this->model('ExportModel');
     }
 

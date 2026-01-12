@@ -24,18 +24,56 @@
                     <div class="col-md-6">
                         <p><strong>Sản phẩm:</strong> <?php echo $info['tenHH']; ?> (<?php echo $info['maHH']; ?>)</p>
                         <p><strong>Serial:</strong> <span class="text-danger fw-bold"><?php echo $info['serial']; ?></span></p>
-                        <p><strong>NCC:</strong> <?php echo $info['tenNCC']; ?></p>
-                        <p><strong>Hạn BH:</strong> <?php echo date('d/m/Y', strtotime($info['hanBaoHanh'])); ?></p>
+                        
+                        <?php if (isset($info['tinhTrang']) && $info['tinhTrang'] === 'IN_STOCK'): ?>
+                            <div class="alert alert-warning">
+                                <i class="bi bi-exclamation-triangle"></i> Sản phẩm đang ở trong kho (Chưa bán).<br>
+                                Chưa kích hoạt thời gian bảo hành.
+                            </div>
+                        <?php else: ?>
+                            <p><strong>Khách hàng:</strong> <?php echo $info['tenKH'] ?? 'Khách lẻ'; ?> (<?php echo $info['sdt'] ?? ''; ?>)</p>
+                            <p><strong>Ngày xuất bán:</strong> <?php echo !empty($info['ngayXuat']) ? date('d/m/Y', strtotime($info['ngayXuat'])) : 'N/A'; ?></p>
+                            <p><strong>Thời gian BH:</strong> <?php echo $info['thoiGianBaoHanh'] ?? 0; ?> tháng</p>
+                            <p><strong>Hạn BH (đến ngày):</strong> 
+                                <?php 
+                                    if (!empty($info['hanBaoHanh'])) {
+                                        $endDate = strtotime($info['hanBaoHanh']);
+                                        $isExpired = time() > $endDate;
+                                        $dateStr = date('d/m/Y', $endDate);
+                                        
+                                        if ($isExpired) {
+                                            echo "<span class='badge bg-danger fs-6'>$dateStr (Đã quá hạn)</span>";
+                                        } else {
+                                            echo "<span class='badge bg-success fs-6'>$dateStr (Còn hạn)</span>";
+                                        }
+                                    } else {
+                                        $isExpired = true; // Không xác định ngày -> coi như không cho tạo
+                                        echo "N/A";
+                                    }
+                                ?>
+                            </p>
+                        <?php endif; ?>
                     </div>
+                    
                     <div class="col-md-6">
-                        <form action="<?php echo BASE_URL; ?>/warranty/create" method="POST">
-                            <input type="hidden" name="maHH" value="<?php echo $info['maHH']; ?>">
-                            <input type="hidden" name="serial" value="<?php echo $info['serial']; ?>">
-                            
-                            <label>Mô tả lỗi:</label>
-                            <textarea name="moTaLoi" class="form-control mb-2" rows="3" required></textarea>
-                            <button class="btn btn-warning w-100 fw-bold">Tạo phiếu bảo hành</button>
-                        </form>
+                        <?php if (isset($info['tinhTrang']) && $info['tinhTrang'] === 'IN_STOCK'): ?>
+                            <button class="btn btn-secondary w-100 fw-bold" disabled>Không thể tạo phiếu (Hàng chưa bán)</button>
+                        <?php elseif (isset($isExpired) && $isExpired): ?>
+                             <div class="alert alert-danger text-center">
+                                 <strong>SẢN PHẨM ĐÃ HẾT HẠN BẢO HÀNH</strong><br>
+                                 Không thể tạo phiếu tiếp nhận.
+                             </div>
+                             <button class="btn btn-secondary w-100 fw-bold" disabled>Đã hết hạn bảo hành</button>
+                        <?php else: ?>
+                            <form action="<?php echo BASE_URL; ?>/warranty/create" method="POST">
+                                <input type="hidden" name="maHH" value="<?php echo $info['maHH']; ?>">
+                                <input type="hidden" name="serial" value="<?php echo $info['serial']; ?>">
+                                
+                                <label>Mô tả lỗi:</label>
+                                <textarea name="moTaLoi" class="form-control mb-2" rows="3" required></textarea>
+                                <button class="btn btn-warning w-100 fw-bold">Tạo phiếu bảo hành</button>
+                            </form>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

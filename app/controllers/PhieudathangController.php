@@ -4,6 +4,8 @@ class PhieudathangController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Chỉ Quản lý hàng (hoặc Admin) mới được quản lý đặt hàng
+        $this->requirePermission('Q_QL_HANG');
         $this->orderModel = $this->model('PhieuDatHangModel');
     }
 

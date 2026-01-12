@@ -9,6 +9,12 @@ class ProductController extends Controller {
 
     // Trang danh sách sản phẩm
     public function index() {
+        // Cần quyền Xem hàng hoặc Quản lý hàng
+        if (!checkPermission('Q_XEM_HANG') && !checkPermission('Q_QL_HANG')) {
+             // Gọi requirePermission với 1 quyền để kích hoạt thông báo lỗi
+             $this->requirePermission('Q_XEM_HANG');
+        }
+
         $products = $this->productModel->getAll();
         
         $data = [
@@ -20,6 +26,9 @@ class ProductController extends Controller {
     }
 
     public function create() {
+        // Chỉ quản lý hàng được thêm
+        $this->requirePermission('Q_QL_HANG');
+
         // 1. Lấy dữ liệu phụ trợ cho các ô Select box
         // Lưu ý: Bạn cần viết thêm các hàm này trong ProductModel hoặc tạo CategoryModel/UnitModel riêng
         // Ở đây mình ví dụ gọi trực tiếp query đơn giản hoặc giả định Model đã có hàm
@@ -43,6 +52,7 @@ class ProductController extends Controller {
     }
 
     public function edit($id) {
+        $this->requirePermission('Q_QL_HANG');
         $db = Database::getInstance()->getConnection();
 
         // Lấy danh mục
@@ -67,6 +77,7 @@ class ProductController extends Controller {
     }
 
     public function update() {
+        $this->requirePermission('Q_QL_HANG');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $id = $_POST['maHH'];
             $data = [
@@ -78,7 +89,8 @@ class ProductController extends Controller {
                 'maDVT' => $_POST['maDVT'],
                 'model' => $_POST['model'],
                 'thuongHieu' => $_POST['thuongHieu'],
-                'moTa' => $_POST['moTa']
+                'moTa' => $_POST['moTa'],
+                'thoiGianBaoHanh' => $_POST['thoiGianBaoHanh']
             ];
 
             if ($this->productModel->update($id, $data)) {
@@ -90,6 +102,7 @@ class ProductController extends Controller {
     }
 
     public function delete($id) {
+        $this->requirePermission('Q_QL_HANG');
         // Try to delete product; model will prevent deleting if there are lots
         if ($this->productModel->delete($id)) {
             header('Location: ' . BASE_URL . '/product');
@@ -139,6 +152,7 @@ class ProductController extends Controller {
 
     // Xử lý lưu sản phẩm vào CSDL
     public function store() {
+        $this->requirePermission('Q_QL_HANG');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Lấy dữ liệu từ form
             $data = [
@@ -150,7 +164,8 @@ class ProductController extends Controller {
                 'maDVT' => $_POST['maDVT'],
                 'model' => $_POST['model'],
                 'thuongHieu' => $_POST['thuongHieu'],
-                'moTa' => $_POST['moTa']
+                'moTa' => $_POST['moTa'],
+                'thoiGianBaoHanh' => $_POST['thoiGianBaoHanh']
             ];
 
             // Gọi Model để insert

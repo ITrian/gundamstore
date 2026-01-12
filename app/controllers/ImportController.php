@@ -4,6 +4,8 @@ class ImportController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Cần quyền nhập kho
+        $this->requirePermission('Q_NHAP_KHO');
         $this->importModel = $this->model('ImportModel');
     }
     // --- THÊM HÀM INDEX VÀO ĐẦU CLASS (Sau __construct) ---

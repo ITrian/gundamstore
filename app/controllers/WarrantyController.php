@@ -4,6 +4,8 @@ class WarrantyController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Chỉ người có quyền Bảo hành (hoặc Admin) mới được vào
+        $this->requirePermission('Q_BAOHANH');
         $this->warrantyModel = $this->model('WarrantyModel');
     }
 

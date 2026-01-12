@@ -6,23 +6,49 @@ class WarrantyModel {
         $this->conn = Database::getInstance()->getConnection();
     }
 
-    // 1. Tìm thông tin theo Serial (Dành cho hàng có Serial)
+    // 1. Tìm thông tin theo Serial (Dành cho hàng có Serial) -> Update logic tính hạn BH theo ngày xuất
     public function findBySerial($keyword) {
-        // Logic mới: Join qua lohang -> phieunhap -> nhacungcap
-        $sql = "SELECT s.serial, 'SERIAL' as loaiTimKiem,
-                       hh.tenHH, hh.maHH, hh.model, hh.loaiHang,
-                       lh.maLo, lh.ngayNhap, lh.hanBaoHanh,
-                       ncc.tenNCC, ncc.maNCC
-                FROM hanghoa_serial s
-                JOIN lohang lh ON s.maLo = lh.maLo
-                JOIN phieunhap pn ON lh.maPN = pn.maPN      -- Join thêm bảng này
-                JOIN nhacungcap ncc ON pn.maNCC = ncc.maNCC -- Để lấy NCC
-                JOIN hanghoa hh ON lh.maHH = hh.maHH
-                WHERE s.serial = :keyword";
+        // Ưu tiên tìm trong danh sách ĐÃ XUẤT (đã bán) trước
+        $sqlSold = "SELECT s.serial, 'SERIAL' as loaiTimKiem,
+                           h.tenHH, h.maHH, h.model, h.loaiHang, h.thoiGianBaoHanh,
+                           px.ngayXuat,
+                           kh.tenKH, kh.sdt,
+                           'SOLD' as tinhTrang
+                    FROM ct_phieuxuat_serial s
+                    JOIN phieuxuat px ON s.maPX = px.maPX
+                    JOIN hanghoa h ON s.maHH = h.maHH
+                    LEFT JOIN khachhang kh ON px.maKH = kh.maKH
+                    WHERE s.serial = :keyword
+                    ORDER BY px.ngayXuat DESC 
+                    LIMIT 1";
         
-        $stmt = $this->conn->prepare($sql);
+        $stmt = $this->conn->prepare($sqlSold);
         $stmt->execute(['keyword' => $keyword]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $sold = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($sold) {
+            // Tính ngày hết hạn = Ngày xuất + Thời gian bảo hành (tháng)
+            if (!empty($sold['ngayXuat']) && isset($sold['thoiGianBaoHanh'])) {
+                $exportDate = new DateTime($sold['ngayXuat']);
+                $months = (int)$sold['thoiGianBaoHanh'];
+                $sold['hanBaoHanh'] = $exportDate->modify("+$months months")->format('Y-m-d');
+            } else {
+                $sold['hanBaoHanh'] = null;
+            }
+            return $sold;
+        }
+
+        // Nếu chưa bán, tìm trong kho (nhưng chưa kích hoạt bảo hành khách hàng)
+        $sqlStock = "SELECT s.serial, 'SERIAL' as loaiTimKiem,
+                            h.tenHH, h.maHH, h.model, h.loaiHang,
+                            'IN_STOCK' as tinhTrang
+                     FROM hanghoa_serial s
+                     JOIN lohang lh ON s.maLo = lh.maLo
+                     JOIN hanghoa h ON lh.maHH = h.maHH
+                     WHERE s.serial = :keyword";
+        $stmt2 = $this->conn->prepare($sqlStock);
+        $stmt2->execute(['keyword' => $keyword]);
+        return $stmt2->fetch(PDO::FETCH_ASSOC);
     }
 
     // 2. Tìm theo Mã hàng hoặc Tên hàng (Dành cho hàng Lô)

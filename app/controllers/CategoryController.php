@@ -4,6 +4,8 @@ class CategoryController extends Controller {
 
     public function __construct() {
         $this->requireLogin();
+        // Chỉ Quản lý hàng (hoặc Admin) mới được quản lý danh mục
+        $this->requirePermission('Q_QL_HANG');
         $this->categoryModel = $this->model('CategoryModel');
     }
 

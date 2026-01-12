@@ -18,7 +18,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="font-weight-bold">Nhà cung cấp (*)</label>
-                            <select name="maNCC" class="form-select" required>
+                            <select name="maNCC" id="select-ncc" class="form-select" required style="width: 100%">
                                 <option value="">-- Chọn NCC --</option>
                                 <?php foreach ($data['suppliers'] as $ncc): ?>
                                     <option value="<?php echo $ncc['maNCC']; ?>">
@@ -31,7 +31,7 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label class="font-weight-bold">Đơn đặt hàng (tuỳ chọn)</label>
-                            <select id="orderSelect" class="form-select">
+                            <select id="orderSelect" class="form-select" style="width: 100%">
                                 <option value="">-- Chọn đơn đặt hàng --</option>
                             </select>
                             <div class="form-text">Chọn NCC trước, sau đó chọn đơn đặt hàng để load chi tiết.</div>
@@ -72,14 +72,16 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <select name="product_id[]" class="form-select form-select-sm" required style="min-width:220px;">
-                                            <option value="">-- Chọn hàng --</option>
-                                            <?php foreach ($data['products'] as $p): ?>
-                                                <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
-                                                    <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                        <div style="flex-grow: 1;">
+                                            <select name="product_id[]" class="form-select form-select-sm import-product-select" required style="width: 100%">
+                                                <option value="">-- Chọn hàng --</option>
+                                                <?php foreach ($data['products'] as $p): ?>
+                                                    <option value="<?php echo $p['maHH']; ?>" data-loai="<?php echo $p['loaiHang']; ?>">
+                                                        <?php echo $p['tenHH']; ?> (<?php echo $p['maHH']; ?>)
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                        </div>
                                         <span class="badge bg-secondary type-badge">LO</span>
                                     </div>
                                 </td>
@@ -125,12 +127,89 @@
     </form>
 </div>
 
+<!-- Serial input modal -->
+<div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="serialModalLabel">Nhập Serials</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-light"><tr><th>#</th><th>Serial</th><th></th></tr></thead>
+                        <tbody>
+                            <!-- rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="serialSaveBtn">Lưu Serials</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>
+
 <script>
+    $(document).ready(function() {
+        // Init Select2 for Supplier
+        $('#select-ncc').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Chọn NCC --',
+            allowClear: true
+        });
+
+        // Init Select2 for Order
+        $('#orderSelect').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Chọn đơn đặt hàng --',
+            allowClear: true
+        });
+
+        // Init Select2 for existing products
+        $('.import-product-select').each(function() {
+            initSelect2Product($(this));
+        });
+    });
+
+    function initSelect2Product(element) {
+        element.select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Chọn hàng --',
+            allowClear: true,
+            dropdownParent: element.parent() 
+        }).on('select2:select', function (e) {
+            // Trigger vanilla change event so updateEvents logic runs
+            this.dispatchEvent(new Event('change', { bubbles: true }));
+        }).on('select2:unselect', function (e) {
+            this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+
     // 1. Thêm dòng mới
     document.getElementById('addRow').addEventListener('click', function() {
         var table = document.getElementById('productTable').getElementsByTagName('tbody')[0];
-        var newRow = table.rows[0].cloneNode(true);
+        // Clone first row
+        var firstRow = table.rows[0];
+        var newRow = null; 
         
+        // Use cloneNode but we need to clean up Select2 artifacts
+        // Instead of deep cloning immediately, we might temporarily destroy select2 on source? No.
+        newRow = firstRow.cloneNode(true);
+        
+        // Clean Select2 from clone
+        $(newRow).find('.select2-container').remove();
+        var sel = $(newRow).find('select');
+        sel.removeClass('select2-hidden-accessible');
+        sel.removeAttr('data-select2-id');
+        sel.find('option').removeAttr('data-select2-id');
+        sel.val(''); // reset value
+
         // Reset giá trị các input trong dòng mới
         var inputs = newRow.getElementsByTagName('input');
         for (var i = 0; i < inputs.length; i++) {
@@ -141,14 +220,16 @@
         var sh = newRow.querySelector('.serials-hidden');
         if (sh) sh.value = '';
         
-        // Reset Select box
-        newRow.getElementsByTagName('select')[0].value = '';
-        
         table.appendChild(newRow);
+        
+        // Init select2 for new row
+        initSelect2Product(sel);
+
         updateEvents(); // Gán lại sự kiện tính tiền cho dòng mới
+        
         // Trigger change on the new select so visibility/badge updates
-        var newSelect = newRow.querySelector('select[name="product_id[]"]');
-        if (newSelect) newSelect.dispatchEvent(new Event('change'));
+        // Native event dispatch works even with Select2 hidden input
+        newRow.querySelector('select[name="product_id[]"]').dispatchEvent(new Event('change'));
     });
 
     // 2. Xóa dòng
@@ -546,7 +627,20 @@
                         const newRow = templateRow.cloneNode(true);
 
                         const select = newRow.querySelector('select[name="product_id[]"]');
+                        // Clean up existing select inside newRow first if it was cloned with artifacts
+                        // (Usually templateRow is already cleaned or pure)
+                        // If clean, just set value:
                         if (select) {
+                            // If select2 is active on the cloned element, we must update it via jQuery
+                            // Wait, newRow is cloned. If templateRow had S2, newRow has S2 classes but not working S2.
+                            
+                            // Let's CLEAN it first like in addRow
+                            $(newRow).find('.select2-container').remove();
+                            $(select).removeClass('select2-hidden-accessible')
+                                     .removeAttr('data-select2-id')
+                                     .find('option').removeAttr('data-select2-id');
+
+                            // Set value
                             select.value = line.maHH;
                         }
 
@@ -575,6 +669,11 @@
                         if (subtotal) subtotal.value = '0';
 
                         tbody.appendChild(newRow);
+
+                        // Init Select2
+                        if (select) {
+                             initSelect2Product($(select));
+                        }
                     });
 
                     updateEvents();
@@ -589,30 +688,3 @@
     });
 </script>
 
-<!-- Serial input modal -->
-<div class="modal fade" id="serialModal" tabindex="-1" aria-labelledby="serialModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="serialModalLabel">Nhập Serials</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="table-responsive">
-                    <table class="table table-sm table-bordered">
-                        <thead class="table-light"><tr><th>#</th><th>Serial</th><th></th></tr></thead>
-                        <tbody>
-                            <!-- rows injected here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                <button type="button" class="btn btn-primary" id="serialSaveBtn">Lưu Serials</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<?php require_once APP_ROOT . '/views/layouts/footer.php'; ?>

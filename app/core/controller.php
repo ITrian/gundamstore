@@ -27,5 +27,15 @@ class Controller {
             exit;
         }
     }
+
+    // Hàm kiểm tra quyền, nếu không có thì chặn
+    protected function requirePermission($permissionCode) {
+        $this->requireLogin();
+        // Gọi hàm global checkPermission từ config
+        if (!checkPermission($permissionCode)) {
+            die("Bạn không có quyền truy cập chức năng này!"); 
+            // Hoặc redirect về trang chủ: header('Location: ' . BASE_URL . '/home'); exit;
+        }
+    }
 }
 ?>
