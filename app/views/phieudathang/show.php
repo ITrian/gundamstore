@@ -19,18 +19,28 @@
                     <thead>
                         <tr>
                             <th>Mã HH</th>
-                            <th>Số lượng</th>
+                            <th>Số lượng đặt</th>
+                            <th>Số lượng đã nhập</th>
                             <th>Đơn giá</th>
+                            <th>Thành tiền</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <?php $tongDonGia = 0; ?>
                         <?php foreach ($data['order']['lines'] as $ln): ?>
+                            <?php $thanhTien = $ln['soLuong'] * $ln['donGia']; $tongDonGia += $thanhTien; ?>
                             <tr>
                                 <td><?php echo $ln['maHH']; ?></td>
                                 <td><?php echo $ln['soLuong']; ?></td>
-                                <td><?php echo $ln['donGia']; ?></td>
+                                <td><?php echo $ln['soLuongDaNhap'] ?? 0; ?></td>
+                                <td><?php echo number_format($ln['donGia'], 0, ',', '.'); ?> đ</td>
+                                <td><?php echo number_format($thanhTien, 0, ',', '.'); ?> đ</td>
                             </tr>
                         <?php endforeach; ?>
+                        <tr>
+                            <th colspan="4" class="text-end">Tổng đơn giá:</th>
+                            <th><?php echo number_format($tongDonGia, 0, ',', '.'); ?> đ</th>
+                        </tr>
                     </tbody>
                 </table>
             </div>

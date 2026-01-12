@@ -7,110 +7,80 @@ class PartnerController extends Controller {
         $this->partnerModel = $this->model('PartnerModel');
     }
 
-    public function index() {
-        $this->supplier();
-    }
+    public function index() { $this->supplier(); }
 
-    // --- 1. QUẢN LÝ DANH SÁCH ---
+    // --- QUẢN LÝ DANH SÁCH ---
     public function supplier() {
-        $data = [
-            'title' => 'Quản lý Nhà cung cấp',
-            'type' => 'supplier',
+        $this->view('partners/index', [
+            'title' => 'Quản lý Nhà cung cấp', 'type' => 'supplier',
             'list' => $this->partnerModel->getSuppliers()
-        ];
-        $this->view('partners/index', $data);
+        ]);
     }
 
     public function customer() {
-        $data = [
-            'title' => 'Quản lý Khách hàng',
-            'type' => 'customer',
+        $this->view('partners/index', [
+            'title' => 'Quản lý Khách hàng', 'type' => 'customer',
             'list' => $this->partnerModel->getCustomers()
-        ];
-        $this->view('partners/index', $data);
+        ]);
     }
 
-    // --- 2. QUẢN LÝ THÊM MỚI ---
+    // --- QUẢN LÝ THÊM MỚI (GIAO DIỆN) ---
     public function create_supplier() {
-        $data = ['title' => 'Thêm NCC', 'type' => 'supplier'];
-        $this->view('partners/create', $data);
+        $this->view('partners/create', ['title' => 'Thêm NCC', 'type' => 'supplier']);
     }
 
     public function create_customer() {
-        $data = ['title' => 'Thêm Khách hàng', 'type' => 'customer'];
-        $this->view('partners/create', $data);
+        $this->view('partners/create', ['title' => 'Thêm Khách hàng', 'type' => 'customer']);
     }
 
-    public function store_supplier() {
-        $this->store_partner('supplier');
-    }
+    // --- XỬ LÝ LƯU (FORM SUBMIT) ---
+    public function store_supplier() { $this->store_partner('supplier'); }
+    public function store_customer() { $this->store_partner('customer'); }
 
-    public function store_customer() {
-        $this->store_partner('customer');
-    }
-
-    // Hàm chung xử lý lưu (để đỡ viết lặp code)
     private function store_partner($type) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'ma' => $_POST['code'],
-                'tenNCC' => $_POST['name'], // Model cần đúng key cột DB
-                'tenKH' => $_POST['name'],  // Model cần đúng key cột DB
-                'diaChi' => $_POST['address'],
-                'sdt' => $_POST['phone'],
-                'email' => $_POST['email']
-            ];
-
-            // Map lại mảng data cho đúng hàm add của Model
-            $insertData = [
-                'diaChi' => $data['diaChi'],
-                'sdt' => $data['sdt'],
-                'email' => $data['email']
-            ];
-
             if ($type == 'supplier') {
-                $table = 'NHACUNGCAP';
-                $col = 'maNCC';
-                $insertData['maNCC'] = $data['ma'];
-                $insertData['tenNCC'] = $data['tenNCC'];
+                // Sinh mã NCC: NCC001
+                $max = $this->partnerModel->getMaxCode('NHACUNGCAP', 'maNCC', 'NCC');
+                $newCode = 'NCC' . str_pad($max + 1, 3, '0', STR_PAD_LEFT);
                 
-                if ($this->partnerModel->checkExists($table, $col, $data['ma'])) { die('Mã đã tồn tại!'); }
-                $this->partnerModel->addSupplier($insertData);
-
+                $this->partnerModel->addSupplier([
+                    'maNCC' => $newCode,
+                    'tenNCC' => $_POST['name'],
+                    'diaChi' => $_POST['address'],
+                    'sdt' => $_POST['phone'],
+                    'email' => $_POST['email']
+                ]);
             } else {
-                $table = 'KHACHHANG';
-                $col = 'maKH';
-                $insertData['maKH'] = $data['ma'];
-                $insertData['tenKH'] = $data['tenKH'];
+                // Sinh mã KH: KH00001
+                $max = $this->partnerModel->getMaxCode('KHACHHANG', 'maKH', 'KH');
+                $newCode = 'KH' . str_pad($max + 1, 5, '0', STR_PAD_LEFT);
 
-                if ($this->partnerModel->checkExists($table, $col, $data['ma'])) { die('Mã đã tồn tại!'); }
-                $this->partnerModel->addCustomer($insertData);
+                $this->partnerModel->addCustomer([
+                    'maKH' => $newCode,
+                    'tenKH' => $_POST['name'],
+                    'diaChi' => $_POST['address'],
+                    'sdt' => $_POST['phone'],
+                    'email' => $_POST['email']
+                ]);
             }
-            
             header('Location: ' . BASE_URL . '/partner/' . $type);
         }
     }
 
-    // --- 3. QUẢN LÝ SỬA (EDIT) ---
+    // --- QUẢN LÝ SỬA ---
     public function edit($type, $code) {
         $table = ($type == 'supplier') ? 'NHACUNGCAP' : 'KHACHHANG';
         $col = ($type == 'supplier') ? 'maNCC' : 'maKH';
-        
         $partner = $this->partnerModel->getPartnerByCode($table, $col, $code);
-        
-        $data = [
-            'title' => 'Cập nhật thông tin',
-            'type' => $type,
-            'partner' => $partner
-        ];
-        $this->view('partners/edit', $data);
+        $this->view('partners/edit', ['title' => 'Cập nhật', 'type' => $type, 'partner' => $partner]);
     }
 
     public function update($type) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $table = ($type == 'supplier') ? 'NHACUNGCAP' : 'KHACHHANG';
-            $pkCol = ($type == 'supplier') ? 'NCC' : 'KH';
-
+            $pkCol = ($type == 'supplier') ? 'NCC' : 'KH'; // Model dùng flag này
+            
             $data = [
                 'code' => $_POST['code'],
                 'name' => $_POST['name'],
@@ -127,30 +97,21 @@ class PartnerController extends Controller {
         }
     }
 
-    // --- 4. QUẢN LÝ XÓA (DELETE) ---
+    // --- QUẢN LÝ XÓA & KHÔI PHỤC ---
     public function delete($type, $code) {
         $this->partnerModel->deleteOrLock($type, $code);
         header('Location: ' . BASE_URL . '/partner/' . $type);
     }
 
     public function inactive() {
-        // 1. Lấy danh sách đã xóa từ Model
-        $inactiveSuppliers = $this->partnerModel->getInactivePartners('supplier');
-        $inactiveCustomers = $this->partnerModel->getInactivePartners('customer');
-
-        $data = [
+        $this->view('partners/inactive', [
             'title' => 'Thùng rác đối tác',
-            'inactive_suppliers' => $inactiveSuppliers,
-            'inactive_customers' => $inactiveCustomers
-        ];
-        
-        // 2. Gọi View hiển thị
-        $this->view('partners/inactive', $data);
+            'inactive_suppliers' => $this->partnerModel->getInactivePartners('supplier'),
+            'inactive_customers' => $this->partnerModel->getInactivePartners('customer')
+        ]);
     }
-    
-    // --- THÊM HÀM KHÔI PHỤC (RESTORE) LUÔN ---
+
     public function restore($type, $code) {
-        // Gọi hàm khôi phục trong Model (Bạn cần thêm hàm restorePartner vào Model như bài trước)
         if ($this->partnerModel->restorePartner($type, $code)) {
             header('Location: ' . BASE_URL . '/partner/inactive');
         } else {
@@ -158,45 +119,57 @@ class PartnerController extends Controller {
         }
     }
 
-    // Trong file: controllers/PartnerController.php
+    // --- [HÀM ĐÃ SỬA LẠI]: THÊM NHANH AJAX ---
+    public function quickAdd() {
+        // 1. Chỉ nhận POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405); return;
+        }
 
-public function quickAdd() {
-    // 1. Nhận dữ liệu
-    $tenKH = $_POST['tenKH'] ?? '';
-    $sdt   = $_POST['sdt'] ?? '';
-    $diaChi = $_POST['diaChi'] ?? '';
+        // 2. Lấy dữ liệu
+        $tenKH = trim($_POST['tenKH'] ?? '');
+        $sdt   = trim($_POST['sdt'] ?? '');
+        $diaChi = trim($_POST['diaChi'] ?? '');
+        $email = trim($_POST['email'] ?? '');
 
-    // 2. Validate đơn giản
-    if (empty($tenKH) || empty($sdt)) {
-        echo json_encode(['success' => false, 'message' => 'Vui lòng nhập tên và SĐT']);
-        return;
-    }
+        if (empty($tenKH) || empty($sdt)) {
+            echo json_encode(['success' => false, 'message' => 'Tên và SĐT là bắt buộc']);
+            return;
+        }
 
-    // 3. Sinh mã khách hàng tự động (Ví dụ: KH + timestamp)
-    $maKH = 'KH' . time(); 
+        try {
+            // --- SỬA LẠI ĐOẠN NÀY (Xóa dòng dùng time()) ---
+            
+            // Cũ (Sai): $maKH = 'KH' . time(); 
+            
+            // Mới (Đúng): Tìm mã lớn nhất trong DB rồi cộng 1
+            $max = $this->partnerModel->getMaxCode('KHACHHANG', 'maKH', 'KH');
+            $maKH = 'KH' . str_pad($max + 1, 5, '0', STR_PAD_LEFT);
+            
+            // -----------------------------------------------
 
-    // 4. Gọi Model để lưu vào Database
-    // $this->partnerModel->addCustomer($maKH, $tenKH, $sdt, $diaChi);
-    // Giả lập code lưu DB (Bạn thay bằng code thật của bạn):
-    $db = Database::getInstance()->getConnection();
-    $stmt = $db->prepare("INSERT INTO khachhang (maKH, tenKH, sdt, diaChi, trangThai) VALUES (?, ?, ?, ?, 1)");
-    
-    try {
-        $stmt->execute([$maKH, $tenKH, $sdt, $diaChi]);
-        
-        // 5. TRẢ VỀ JSON THÀNH CÔNG (Quan trọng để JS tự động chọn)
-        echo json_encode([
-            'success' => true,
-            'data' => [
+            // 4. Tạo mảng dữ liệu
+            $insertData = [
                 'maKH' => $maKH,
                 'tenKH' => $tenKH,
+                'diaChi' => $diaChi,
                 'sdt' => $sdt,
-                'diaChi' => $diaChi
-            ]
-        ]);
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()]);
+                'email' => $email
+            ];
+
+            // 5. Gọi Model thêm vào DB
+            if ($this->partnerModel->addCustomer($insertData)) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => $insertData // Trả về dữ liệu để JS tự điền
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Lỗi DB: Không thể thêm khách.']);
+            }
+
+        } catch (Exception $e) {
+            echo json_encode(['success' => false, 'message' => 'Lỗi: ' . $e->getMessage()]);
+        }
     }
-}
 }
 ?>

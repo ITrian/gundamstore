@@ -5,11 +5,41 @@ class ImportModel {
     public function __construct() {
         $this->conn = Database::getInstance()->getConnection();
     }
-    
-    // ... (Giữ nguyên các hàm getSuppliers, getProducts) ...
 
+    // --- ĐÃ SỬA: Sinh mã phiếu nhập theo định dạng PN-YYMMDD-XXX ---
+    private function generateMaPN() {
+        // Lấy ngày format YYMMDD (Ví dụ: 260109 cho ngày 09/01/2026)
+        $date = date('ymd'); 
+        
+        // Cấu trúc: PN-260109-001
+        // Đếm ký tự: P(1) N(2) -(3) 2(4) 6(5) 0(6) 1(7) 0(8) 9(9) -(10) [Số bắt đầu từ 11]
+        $sql = "SELECT MAX(CAST(SUBSTRING(maPN, 11, 3) AS UNSIGNED)) as max_stt 
+                FROM phieunhap 
+                WHERE maPN LIKE ?";
+        
+        // Mẫu tìm kiếm: PN-260109-%
+        $like = 'PN-' . $date . '-%';
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$like]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Nếu chưa có thì bắt đầu là 1, có rồi thì cộng thêm 1
+        $stt = isset($row['max_stt']) && $row['max_stt'] ? ((int)$row['max_stt'] + 1) : 1;
+        
+        // Trả về: PN-260109-001
+        return 'PN-' . $date . '-' . str_pad($stt, 3, '0', STR_PAD_LEFT);
+    }
+
+    // Sinh tiền tố mã lô: LO + [YYYYMMDD] (Ví dụ: LO20260109)
+    private function generateBaseMaLoPrefix() {
+        return 'LO' . date('Ymd');
+    }
+
+    // ... (Giữ nguyên các hàm getSuppliers, getProducts) ...
     public function getSuppliers() {
-        $stmt = $this->conn->prepare("SELECT * FROM nhacungcap");
+        // Chỉ lấy nhà cung cấp đang hoạt động (trangThai = 1)
+        $stmt = $this->conn->prepare("SELECT * FROM nhacungcap WHERE trangThai = 1 ORDER BY tenNCC ASC");
         $stmt->execute();
         return $stmt->fetchAll();
     }
@@ -19,7 +49,7 @@ class ImportModel {
         $stmt->execute();
         return $stmt->fetchAll();
     }
-    
+
     public function getAllImports() {
         $sql = "SELECT pn.*, ncc.tenNCC, nd.tenND 
                 FROM phieunhap pn
@@ -31,12 +61,8 @@ class ImportModel {
         return $stmt->fetchAll();
     }
 
-    /**
-     * Get full import info by maPN, including header, detail lines, lots, locations and serials
-     * Returns array with 'header' and 'lines' where each line contains product info and nested lots
-     */
     public function getImportById($maPN) {
-        // header
+        // Header
         $sql = "SELECT pn.*, ncc.tenNCC, nd.tenND
                 FROM phieunhap pn
                 JOIN nhacungcap ncc ON pn.maNCC = ncc.maNCC
@@ -45,10 +71,9 @@ class ImportModel {
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':maPN' => $maPN]);
         $header = $stmt->fetch(PDO::FETCH_ASSOC);
-
         if (!$header) return null;
 
-        // detail lines
+        // Lines
         $sqlLines = "SELECT ct.*, hh.tenHH
                      FROM ct_phieunhap ct
                      LEFT JOIN hanghoa hh ON ct.maHH = hh.maHH
@@ -57,7 +82,7 @@ class ImportModel {
         $stmt->execute([':maPN' => $maPN]);
         $lines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // For each line, fetch the lot(s) created for this PN+HH and associated locations and serials
+        // Nested Lots, Locations, Serials
         foreach ($lines as &$ln) {
             $ln['lots'] = [];
             $sqlLohang = "SELECT * FROM lohang WHERE maPN = :maPN AND maHH = :maHH";
@@ -67,24 +92,19 @@ class ImportModel {
 
             foreach ($lohangs as $lh) {
                 $lot = $lh;
-                // locations for this lot
                 $sqlLoc = "SELECT lvt.*, v.day, v.ke, v.o FROM lo_hang_vi_tri lvt LEFT JOIN vitri v ON lvt.maViTri = v.maViTri WHERE lvt.maLo = :maLo";
                 $stmtLoc = $this->conn->prepare($sqlLoc);
                 $stmtLoc->execute([':maLo' => $lh['maLo']]);
-                $locs = $stmtLoc->fetchAll(PDO::FETCH_ASSOC);
-                $lot['locations'] = $locs;
+                $lot['locations'] = $stmtLoc->fetchAll(PDO::FETCH_ASSOC);
 
-                // serials for this lot
                 $sqlSerials = "SELECT serial, trangThai, maViTri FROM hanghoa_serial WHERE maLo = :maLo";
                 $stmtS = $this->conn->prepare($sqlSerials);
                 $stmtS->execute([':maLo' => $lh['maLo']]);
-                $serials = $stmtS->fetchAll(PDO::FETCH_ASSOC);
-                $lot['serials'] = $serials;
+                $lot['serials'] = $stmtS->fetchAll(PDO::FETCH_ASSOC);
 
                 $ln['lots'][] = $lot;
             }
         }
-
         return ['header' => $header, 'lines' => $lines];
     }
 
@@ -93,111 +113,192 @@ class ImportModel {
             $this->conn->beginTransaction();
 
             // 1. Tạo Phiếu Nhập
-            $sqlPN = "INSERT INTO phieunhap (maPN, ngayNhap, maNCC, ghiChu, maND) 
-                      VALUES (:maPN, NOW(), :maNCC, :ghiChu, :maND)";
+            // Nếu người dùng không nhập mã, hệ thống tự sinh mã theo format PN-YYMMDD-XXX
+            $maPN = !empty($data['maPN']) ? $data['maPN'] : $this->generateMaPN();
+            
+            // Validate: Đảm bảo mã phiếu nhập chưa tồn tại (Xử lý trường hợp click nhanh gây trùng)
+            $stmtCheckPN = $this->conn->prepare("SELECT COUNT(*) FROM phieunhap WHERE maPN = :maPN");
+            $stmtCheckPN->execute([':maPN' => $maPN]);
+            if ($stmtCheckPN->fetchColumn() > 0) {
+                 $maPN = $this->generateMaPN();
+            }
+
+            // Cho phép liên kết phiếu nhập với một đơn đặt hàng (maDH) nếu có
+            $hasOrder = !empty($data['maDH']);
+
+            if ($hasOrder) {
+                // Thêm cột maDH vào phieunhap nếu chưa có trong DB, phần SQL schema cần được cập nhật tương ứng
+                $sqlPN = "INSERT INTO phieunhap (maPN, ngayNhap, maNCC, ghiChu, maND) 
+                          VALUES (:maPN, NOW(), :maNCC, :ghiChu, :maND)";
+            } else {
+                $sqlPN = "INSERT INTO phieunhap (maPN, ngayNhap, maNCC, ghiChu, maND) 
+                          VALUES (:maPN, NOW(), :maNCC, :ghiChu, :maND)";
+            }
             $stmtPN = $this->conn->prepare($sqlPN);
             $stmtPN->execute([
-                ':maPN' => $data['maPN'],
+                ':maPN' => $maPN,
                 ':maNCC' => $data['maNCC'],
                 ':ghiChu' => $data['ghiChu'],
                 ':maND' => $data['maND']
             ]);
 
-            // Lấy một vị trí mặc định (Vị trí đầu tiên trong DB) để xếp hàng vào
-            // Thực tế bạn nên cho người dùng chọn vị trí trên Form
-            $stmtVT = $this->conn->query("SELECT maViTri FROM vitri LIMIT 1");
-            $defaultViTri = $stmtVT->fetchColumn();
+            // Lấy danh sách vị trí
+            $stmtVT = $this->conn->query("SELECT maViTri, sucChuaToiDa FROM vitri ORDER BY day ASC, ke ASC, o ASC");
+            $vitriList = $stmtVT->fetchAll(PDO::FETCH_ASSOC);
 
-            if (!$defaultViTri) {
+            if (!$vitriList || count($vitriList) == 0) {
                 throw new Exception("Chưa có dữ liệu Vị trí (Kệ hàng) trong hệ thống!");
             }
 
-            foreach ($products as $item) {
-                // Determine product type from hanghoa.loaiHang
-                $stmtType = $this->conn->prepare("SELECT loaiHang FROM hanghoa WHERE maHH = :maHH LIMIT 1");
+            // Logic sinh mã lô (không đổi)
+            $prefixLo = $this->generateBaseMaLoPrefix(); 
+            $stmtMaxLo = $this->conn->prepare("SELECT MAX(CAST(SUBSTRING(maLo, 11, 4) AS UNSIGNED)) FROM lohang WHERE maLo LIKE ?");
+            $stmtMaxLo->execute([$prefixLo . '%']);
+            $currentMaxStt = (int)$stmtMaxLo->fetchColumn(); 
+
+            // Nếu có đơn đặt hàng, cần ghi nhận số lượng nhập để cập nhật soLuongDaNhap
+            $receivedByProduct = [];
+
+            foreach ($products as $index => $item) {
+                $currentMaxStt++; 
+                $maLo = $prefixLo . str_pad($currentMaxStt, 4, '0', STR_PAD_LEFT);
+
+                // --- LOGIC XỬ LÝ DỮ LIỆU ---
+                $stmtType = $this->conn->prepare("SELECT loaiHang, heSoChiemCho FROM hanghoa WHERE maHH = :maHH LIMIT 1");
                 $stmtType->execute([':maHH' => $item['maHH']]);
                 $rowType = $stmtType->fetch(PDO::FETCH_ASSOC);
+                
                 $loai = $rowType['loaiHang'] ?? 'LO';
+                $heSo = isset($rowType['heSoChiemCho']) ? (int)$rowType['heSoChiemCho'] : 1;
+                $soLuongConLai = (int)$item['soLuong'];
 
-                // create a lot record (maLo) for this receipt line
-                $maLo = 'LO-' . $data['maPN'] . '-' . $item['maHH'] . '-' . uniqid();
-
-                // Insert lohang (always create a lot to group the received items)
+                // 2. Insert Lô hàng
                 $sqlLo = "INSERT INTO lohang (maLo, maPN, maHH, soLuongNhap, ngayNhap, hanBaoHanh) 
                           VALUES (:maLo, :maPN, :maHH, :soLuong, NOW(), :hsd)";
                 $stmtLo = $this->conn->prepare($sqlLo);
                 $stmtLo->execute([
                     ':maLo' => $maLo,
-                    ':maPN' => $data['maPN'],
+                    ':maPN' => $maPN,
                     ':maHH' => $item['maHH'],
                     ':soLuong' => $item['soLuong'],
                     ':hsd' => !empty($item['hsd']) ? $item['hsd'] : NULL
                 ]);
 
-                // Before inserting into lo_hang_vi_tri, check capacity (points) of the position
-                // Get product space factor (heSoChiemCho)
-                $stmtHeSo = $this->conn->prepare("SELECT heSoChiemCho FROM hanghoa WHERE maHH = :maHH LIMIT 1");
-                $stmtHeSo->execute([':maHH' => $item['maHH']]);
-                $heSoRow = $stmtHeSo->fetch(PDO::FETCH_ASSOC);
-                $heSo = isset($heSoRow['heSoChiemCho']) ? (int)$heSoRow['heSoChiemCho'] : 1;
+                // 3. Phân bổ vị trí
+                foreach ($vitriList as $vitri) {
+                    if ($soLuongConLai <= 0) break;
+                    
+                    $stmtOcc = $this->conn->prepare(
+                        "SELECT COALESCE(SUM(lvt2.soLuong * hh2.heSoChiemCho),0) as occupied
+                         FROM lo_hang_vi_tri lvt2
+                         JOIN lohang lh2 ON lvt2.maLo = lh2.maLo
+                         JOIN hanghoa hh2 ON lh2.maHH = hh2.maHH
+                         WHERE lvt2.maViTri = :maViTri"
+                    );
+                    $stmtOcc->execute([':maViTri' => $vitri['maViTri']]);
+                    $occRow = $stmtOcc->fetch(PDO::FETCH_ASSOC);
+                    
+                    $occupiedPoints = (int)$occRow['occupied'];
+                    $capacityPoints = isset($vitri['sucChuaToiDa']) ? (int)$vitri['sucChuaToiDa'] : 100;
+                    $availablePoints = $capacityPoints - $occupiedPoints;
+                    
+                    $maxCanStore = ($heSo > 0) ? floor($availablePoints / $heSo) : $soLuongConLai; 
+                    
+                    if ($maxCanStore <= 0) continue;
+                    
+                    $toStore = min($soLuongConLai, $maxCanStore);
 
-                // compute required points for this insertion
-                $requiredPoints = $heSo * (int)$item['soLuong'];
+                    $sqlTon = "INSERT INTO lo_hang_vi_tri (maLo, maViTri, soLuong) VALUES (:maLo, :maViTri, :soLuong)";
+                    $stmtTon = $this->conn->prepare($sqlTon);
+                    $stmtTon->execute([
+                        ':maLo' => $maLo,
+                        ':maViTri' => $vitri['maViTri'],
+                        ':soLuong' => $toStore
+                    ]);
 
-                // compute current occupied points at the position
-                $stmtOcc = $this->conn->prepare(
-                    "SELECT COALESCE(SUM(lvt2.soLuong * hh2.heSoChiemCho),0) as occupied
-                     FROM lo_hang_vi_tri lvt2
-                     JOIN lohang lh2 ON lvt2.maLo = lh2.maLo
-                     JOIN hanghoa hh2 ON lh2.maHH = hh2.maHH
-                     WHERE lvt2.maViTri = :maViTri"
-                );
-                $stmtOcc->execute([':maViTri' => $defaultViTri]);
-                $occRow = $stmtOcc->fetch(PDO::FETCH_ASSOC);
-                $occupiedPoints = isset($occRow['occupied']) ? (int)$occRow['occupied'] : 0;
+                    if ($loai === 'SERIAL' && !empty($item['serials']) && is_array($item['serials'])) {
+                        $sqlSerial = "INSERT INTO hanghoa_serial (serial, maLo, trangThai, maViTri) VALUES (:serial, :maLo, 1, :maViTri)";
+                        $stmtSerial = $this->conn->prepare($sqlSerial);
+                        
+                        $startIndex = $item['soLuong'] - $soLuongConLai; 
+                        $serialsToInsert = array_slice($item['serials'], $startIndex, $toStore);
+                        
+                        foreach ($serialsToInsert as $s) {
+                            $stmtSerial->execute([
+                                ':serial' => $s,
+                                ':maLo' => $maLo,
+                                ':maViTri' => $vitri['maViTri']
+                            ]);
+                        }
+                    }
 
-                // get capacity points
-                $stmtCap = $this->conn->prepare("SELECT sucChuaToiDa FROM vitri WHERE maViTri = :maViTri LIMIT 1");
-                $stmtCap->execute([':maViTri' => $defaultViTri]);
-                $capRow = $stmtCap->fetch(PDO::FETCH_ASSOC);
-                $capacityPoints = isset($capRow['sucChuaToiDa']) ? (int)$capRow['sucChuaToiDa'] : 100;
-
-                if (($occupiedPoints + $requiredPoints) > $capacityPoints) {
-                    throw new Exception("Vị trí {$defaultViTri} không đủ sức chứa. Cần: {$requiredPoints}, còn trống: " . max(0, $capacityPoints - $occupiedPoints));
+                    $soLuongConLai -= $toStore;
                 }
 
-                // Insert into lo_hang_vi_tri
-                $sqlTon = "INSERT INTO lo_hang_vi_tri (maLo, maViTri, soLuong) VALUES (:maLo, :maViTri, :soLuong)";
-                $stmtTon = $this->conn->prepare($sqlTon);
-                $stmtTon->execute([
-                    ':maLo' => $maLo,
-                    ':maViTri' => $defaultViTri, // Tạm thời nhét hết vào vị trí đầu tiên
-                    ':soLuong' => $item['soLuong']
-                ]);
+                if ($soLuongConLai > 0) {
+                    throw new Exception("Không đủ sức chứa cho hàng hóa " . $item['maHH'] . ". Thiếu chỗ cho " . $soLuongConLai . " sản phẩm.");
+                }
 
-                // Insert into ct_phieunhap
+                // 4. Insert Chi tiết phiếu nhập
                 $sqlCT = "INSERT INTO ct_phieunhap (maPN, maHH, soLuong, donGia) 
                           VALUES (:maPN, :maHH, :soLuong, :donGia)";
                 $stmtCT = $this->conn->prepare($sqlCT);
                 $stmtCT->execute([
-                    ':maPN' => $data['maPN'],
+                    ':maPN' => $maPN,
                     ':maHH' => $item['maHH'],
                     ':soLuong' => $item['soLuong'],
                     ':donGia' => $item['donGia']
                 ]);
 
-                // If product is SERIAL-managed, insert individual serial records
-                if ($loai === 'SERIAL' && !empty($item['serials']) && is_array($item['serials'])) {
-                    $sqlSerial = "INSERT INTO hanghoa_serial (serial, maLo, trangThai, maViTri) VALUES (:serial, :maLo, 1, :maViTri)";
-                    $stmtSerial = $this->conn->prepare($sqlSerial);
-                    foreach ($item['serials'] as $s) {
-                        $stmtSerial->execute([
-                            ':serial' => $s,
-                            ':maLo' => $maLo,
-                            ':maViTri' => $defaultViTri
-                        ]);
+                // Ghi nhận số lượng đã nhập cho từng mặt hàng nếu có đơn đặt hàng
+                if ($hasOrder) {
+                    if (!isset($receivedByProduct[$item['maHH']])) {
+                        $receivedByProduct[$item['maHH']] = 0;
+                    }
+                    $receivedByProduct[$item['maHH']] += (int)$item['soLuong'];
+                }
+            }
+
+            // Nếu phiếu nhập gắn với đơn đặt hàng thì cập nhật chi tiết đơn & trạng thái đơn
+            if ($hasOrder) {
+                // Lấy chi tiết đơn đặt
+                $sqlOrderLines = "SELECT maHH, soLuong, COALESCE(soLuongDaNhap,0) AS soLuongDaNhap 
+                                  FROM ct_phieudathang WHERE maDH = :maDH";
+                $stmtOL = $this->conn->prepare($sqlOrderLines);
+                $stmtOL->execute([':maDH' => $data['maDH']]);
+                $orderLines = $stmtOL->fetchAll(PDO::FETCH_ASSOC);
+
+                $allFull = true; // giả định nhập đủ, nếu có mặt hàng thiếu sẽ gán false
+                foreach ($orderLines as $ol) {
+                    $ordered = (int)$ol['soLuong'];
+                    $prevTotal = (int)$ol['soLuongDaNhap'];
+                    $current = $receivedByProduct[$ol['maHH']] ?? 0;
+                    $totalReceived = $prevTotal + $current;
+
+                    // Cập nhật lại soLuongDaNhap cho từng dòng
+                    $stmtUpdLine = $this->conn->prepare(
+                        "UPDATE ct_phieudathang 
+                         SET soLuongDaNhap = :soLuongDaNhap 
+                         WHERE maDH = :maDH AND maHH = :maHH"
+                    );
+                    $stmtUpdLine->execute([
+                        ':soLuongDaNhap' => $totalReceived,
+                        ':maDH' => $data['maDH'],
+                        ':maHH' => $ol['maHH']
+                    ]);
+
+                    if ($totalReceived < $ordered) {
+                        $allFull = false; // vẫn còn thiếu hàng
                     }
                 }
+
+                // Quy ước mới: 0 = chờ nhập, 1 = nhập thiếu, 2 = nhập đủ
+                $newStatus = $allFull ? 2 : 1;
+                $stmtUpd = $this->conn->prepare("UPDATE phieudathang SET trangThai = :trangThai WHERE maDH = :maDH");
+                $stmtUpd->execute([
+                    ':trangThai' => $newStatus,
+                    ':maDH' => $data['maDH']
+                ]);
             }
 
             $this->conn->commit();
@@ -205,7 +306,6 @@ class ImportModel {
 
         } catch (Exception $e) {
             $this->conn->rollBack();
-            // Propagate exception so controller can show a clearer error message / handle it
             throw $e;
         }
     }

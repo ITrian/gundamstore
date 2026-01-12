@@ -16,11 +16,10 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label font-weight-bold">
-                            Mã <?php echo ($data['type'] == 'supplier') ? 'NCC' : 'Khách hàng'; ?> (*)
+                            Mã <?php echo ($data['type'] == 'supplier') ? 'NCC' : 'Khách hàng'; ?> (tự động)
                         </label>
-                        <input type="text" name="code" class="form-control" required 
-                               placeholder="<?php echo ($data['type'] == 'supplier') ? 'Ví dụ: NCC01' : 'Ví dụ: KH01'; ?>">
-                        <small class="text-muted">Mã này là duy nhất, không được trùng.</small>
+                        <input type="text" name="code" class="form-control bg-light" value="(Tự động)" readonly>
+                        <small class="text-muted">Mã sẽ được tạo tự động, bạn không cần nhập.</small>
                     </div>
 
                     <div class="col-md-6 mb-3">

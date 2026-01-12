@@ -35,14 +35,14 @@ class ImportController extends Controller {
     public function store() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // 1. Chuẩn bị dữ liệu Header (Phiếu nhập)
-            // Tự sinh mã phiếu: PN + Timestamp (để không trùng)
-            $maPN = 'PN' . time(); 
-            
+            // Không truyền maPN, để model tự sinh đúng định dạng
             $headerData = [
-                'maPN' => $maPN,
+                // 'maPN' => $maPN, // bỏ dòng này
                 'maNCC' => $_POST['maNCC'],
                 'ghiChu' => $_POST['ghiChu'],
-                'maND' => $_SESSION['user_id'] // Lấy ID người đang đăng nhập
+                'maND' => $_SESSION['user_id'], // Lấy ID người đang đăng nhập
+                // Mã đơn đặt hàng (nếu tạo phiếu nhập theo đơn đặt hàng)
+                'maDH' => isset($_POST['maDH']) && $_POST['maDH'] !== '' ? $_POST['maDH'] : null
             ];
 
             // 2. Chuẩn bị dữ liệu Detail (Danh sách hàng)
