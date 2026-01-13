@@ -99,4 +99,20 @@ class UserController extends Controller {
             die('Lỗi khi xóa người dùng.');
         }
     }
+
+    public function locked() {
+        $users = $this->userModel->getLockedUsers();
+        $this->view('users/locked', [
+            'title' => 'Tài khoản bị khóa',
+            'users' => $users
+        ]);
+    }
+
+    public function restore($id) {
+        if ($this->userModel->restore($id)) {
+            header('Location: ' . BASE_URL . '/user/locked');
+        } else {
+            die('Lỗi khi khôi phục tài khoản.');
+        }
+    }
 }

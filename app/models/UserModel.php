@@ -38,15 +38,35 @@ class UserModel {
         return $stmt->fetchAll(PDO::FETCH_COLUMN); // Trả về mảng 1 chiều các mã quyền
     }
 
-    // Lấy tất cả người dùng kèm vai trò
+    // Lấy tất cả người dùng ĐANG HOẠT ĐỘNG kèm vai trò
     public function getAllUsers() {
         $sql = "SELECT nd.*, vt.tenVaiTro 
                 FROM nguoidung nd 
                 JOIN vaitro vt ON nd.maVaiTro = vt.maVaiTro
+                WHERE nd.hoatDong = 1
                 ORDER BY nd.maND ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách người dùng BỊ KHÓA
+    public function getLockedUsers() {
+        $sql = "SELECT nd.*, vt.tenVaiTro 
+                FROM nguoidung nd 
+                JOIN vaitro vt ON nd.maVaiTro = vt.maVaiTro
+                WHERE nd.hoatDong = 0
+                ORDER BY nd.maND ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Khôi phục tài khoản (Mở khóa)
+    public function restore($id) {
+        $sql = "UPDATE nguoidung SET hoatDong = 1 WHERE maND = :id";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([':id' => $id]);
     }
 
     // Lấy chi tiết user
@@ -97,11 +117,48 @@ class UserModel {
         return $stmt->execute($params);
     }
 
-    // Xóa người dùng
+    // Xóa người dùng (Cập nhật logic khóa tài khoản)
     public function delete($id) {
-        $sql = "DELETE FROM nguoidung WHERE maND = :id";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([':id' => $id]);
+        // 1. Kiểm tra xem user này đã từng tạo dữ liệu quan trọng chưa
+        // Các bảng cần check: phieunhap (maND), phieuxuat (maNDXuat), phieubh (maND)
+        
+        $hasData = false;
+
+        // Check phiếu nhập
+        $sql1 = "SELECT COUNT(*) FROM phieunhap WHERE maND = :id";
+        $stmt1 = $this->conn->prepare($sql1);
+        $stmt1->execute([':id' => $id]);
+        if ($stmt1->fetchColumn() > 0) $hasData = true;
+
+        // Check phiếu xuất (chỉ check nếu chưa phát hiện)
+        if (!$hasData) {
+            $sql2 = "SELECT COUNT(*) FROM phieuxuat WHERE maNDXuat = :id";
+            $stmt2 = $this->conn->prepare($sql2);
+            $stmt2->execute([':id' => $id]);
+            if ($stmt2->fetchColumn() > 0) $hasData = true;
+        }
+
+        // Check phiếu bảo hành
+        if (!$hasData) {
+            // Kiểm tra bảng phieubh nếu tồn tại column maND
+            // Tạm thời giả định bảng phieubh có maND như context WarrantyModel
+            $sql3 = "SELECT COUNT(*) FROM phieubh WHERE maND = :id";
+            $stmt3 = $this->conn->prepare($sql3);
+            $stmt3->execute([':id' => $id]);
+            if ($stmt3->fetchColumn() > 0) $hasData = true;
+        }
+
+        if ($hasData) {
+            // Nếu đã có dữ liệu => KHÔNG XÓA mà CHUYỂN TRẠNG THÁI hoatDong = 0 (Khóa)
+            $sqlLock = "UPDATE nguoidung SET hoatDong = 0 WHERE maND = :id";
+            $stmtLock = $this->conn->prepare($sqlLock);
+            return $stmtLock->execute([':id' => $id]);
+        } else {
+             // Nếu chưa tạo gì cả => XÓA VĨNH VIỄN
+            $sqlDel = "DELETE FROM nguoidung WHERE maND = :id";
+            $stmtDel = $this->conn->prepare($sqlDel);
+            return $stmtDel->execute([':id' => $id]);
+        }
     }
 
     public function checkIdExists($id) {

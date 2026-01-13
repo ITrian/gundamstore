@@ -29,19 +29,29 @@ class AuthController extends Controller {
                 $user = $userModel->getByUsername($username);
                 // Kiểm tra mật khẩu (Sử dụng password_verify để so sánh hash)
                 if ($user && password_verify($password, $user['matKhau'])) {
-                    // Đăng nhập thành công -> Lưu Session
-                    $_SESSION['user_id'] = $user['maND'];
-                    $_SESSION['user_name'] = $user['tenND'];
-                    $_SESSION['user_role'] = $user['maVaiTro'];
-                    $_SESSION['role_name'] = $user['tenVaiTro'];
                     
-                    // Lưu danh sách quyền vào session
-                    $permissions = $userModel->getPermissions($user['maND']);
-                    $_SESSION['user_permissions'] = $permissions;
+                    // --- MỚI: Kiểm tra trạng thái hoạt động ---
+                    // Nếu cột hoatDong = 0 thì chặn đăng nhập
+                    if (isset($user['hoatDong']) && $user['hoatDong'] == 0) {
+                        $data['error'] = "Tài khoản của bạn đang bị TẠM KHÓA. Vui lòng liên hệ quản trị viên.";
+                    } else {
+                        // Đăng nhập thành công -> Lưu Session
+                        $_SESSION['user_id'] = $user['maND'];
+                        $_SESSION['user_name'] = $user['tenND'];
+                       
+                        // ...existing code...
+                        $_SESSION['user_role'] = $user['maVaiTro'];
+                        $_SESSION['role_name'] = $user['tenVaiTro'];
+                        
+                        // Lưu danh sách quyền vào session
+                        $permissions = $userModel->getPermissions($user['maND']);
+                        $_SESSION['user_permissions'] = $permissions;
 
-                    // Chuyển hướng vào trang Dashboard
-                    header('Location: ' . BASE_URL . '/home/index');
-                    exit;
+                        // Chuyển hướng vào trang Dashboard
+                        header('Location: ' . BASE_URL . '/home/index');
+                        exit;
+                    }
+
                 } else {
                     $data['error'] = "Tài khoản hoặc mật khẩu không chính xác!";
                 }
